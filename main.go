@@ -2,102 +2,105 @@ package main
 
 import (
 	"embed"
-	"fmt"
-	"io"
-	"io/fs"
+	"flag"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
+	"strconv"
+	"time"
 
-	"github.com/webview/webview"
+	"github.com/benitogf/ko"
+	"github.com/benitogf/mono/auth"
+	"github.com/benitogf/mono/network"
+	"github.com/benitogf/mono/router"
+	"github.com/benitogf/mono/spa"
+	"github.com/benitogf/mono/webview"
+	"github.com/benitogf/ooo"
+	"github.com/gorilla/mux"
+	wv "github.com/webview/webview_go"
 )
 
 //go:embed build/*
-var content embed.FS
+var uiBuildFS embed.FS
 
-// helper functions (https://github.com/webview/webview/issues/561#issuecomment-1364533953)
-// bits to filereader (https://stackoverflow.com/a/57583377)
-type MyReader struct {
-	src []byte
-	pos int
-}
+var tempPathSpa string
+var tempPathUI string
+var view wv.WebView
 
-func (r *MyReader) Read(dst []byte) (n int, err error) {
-	n = copy(dst, r.src[r.pos:])
-	r.pos += n
-	if r.pos == len(r.src) {
-		return n, io.EOF
-	}
-	return
-}
+var key = flag.String("key", "a-secret-key", "secret key for tokens")
+var dataPath = flag.String("dataPath", "db/data", "data storage path")
+var authPath = flag.String("authPath", "db/auth", "auth storage path")
+var port = flag.Int("port", 8888, "service port")
+var silence = flag.Bool("silence", true, "silence output")
+var ui = flag.Bool("ui", false, "run with UI")
+var spaUI = flag.Bool("spa", true, "run with spa UI")
 
-func NewMyReader(b []byte) *MyReader { return &MyReader{b, 0} }
-
-func expandEmbed(eFS embed.FS) (string, error) {
-	// expand embedded dir into temp fs
-	dir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return "", err
+func cleanup() {
+	if tempPathSpa != "" {
+		defer os.RemoveAll(tempPathSpa)
 	}
 
-	fmt.Println("expanding to temp dir:", dir)
-
-	err = fs.WalkDir(eFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		fileName := filepath.Join(dir, path)
-		if d.IsDir() {
-			fmt.Println("dir", fileName)
-			os.MkdirAll(fileName, os.ModePerm)
-		} else {
-			fmt.Println("file", fileName)
-			destination, err := os.Create(fileName)
-			if err != nil {
-				return err
-			}
-			defer destination.Close()
-			file, err := content.ReadFile(path)
-			if err != nil {
-				log.Println("failed to read file", err)
-				return err
-			}
-			// replacing absolute paths in the index
-			if strings.Contains(fileName, "index.html") {
-				current := string(file)
-				current = strings.ReplaceAll(current, `href="/`, `href="./`)
-				current = strings.ReplaceAll(current, `src="/`, `src="./`)
-				nBytes, err := io.Copy(destination, NewMyReader([]byte(current)))
-				_ = nBytes
-				return err
-			}
-			nBytes, err := io.Copy(destination, NewMyReader(file))
-			_ = nBytes
-			return err
-		}
-
-		return nil
-	})
-
-	return dir, err
+	if tempPathUI != "" {
+		defer os.RemoveAll(tempPathUI)
+	}
 }
 
 func main() {
-	w := webview.New(false)
-	defer w.Destroy()
+	flag.Parse()
 
-	d, err := expandEmbed(content)
+	// auth storage
+	authStore := &ko.Storage{Path: *authPath}
+	err := authStore.Start(ooo.StorageOpt{})
 	if err != nil {
-		log.Panic("Error expanding FS")
+		log.Fatal(err)
 	}
-	defer os.RemoveAll(d)
+	go ooo.WatchStorageNoop(authStore)
+	autho := auth.New(
+		auth.NewJwtStore(*key, time.Hour*48),
+		authStore,
+	)
 
-	w.SetSize(480, 320, webview.HintNone)
-	index := filepath.Join(d, "build", "index.html")
-	log.Println("index", index)
+	// Server
+	server := &ooo.Server{
+		ReadTimeout:    20 * time.Minute,
+		WriteTimeout:   20 * time.Minute,
+		IdleTimeout:    20 * time.Minute,
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowedHeaders: []string{"Authorization", "X-Requested-With", "X-Request-ID", "X-HTTP-Method-Override", "Upload-Length", "Upload-Offset", "Tus-Resumable", "Upload-Metadata", "Upload-Defer-Length", "Upload-Concat", "User-Agent", "Referrer", "Origin", "Content-Type", "Content-Length"},
+		ExposedHeaders: []string{"Upload-Offset", "Location", "Upload-Length", "Tus-Version", "Tus-Resumable", "Tus-Max-Size", "Tus-Extension", "Upload-Metadata", "Upload-Defer-Length", "Upload-Concat", "Location", "Upload-Offset", "Upload-Length"},
+		Router:         mux.NewRouter(),
+		Static:         true,
+		Workers:        2,
+		Storage:        &ko.Storage{Path: *dataPath},
+		OnClose: func() {
+			log.Println("going away")
+			cleanup()
+			if *ui && view != nil {
+				log.Println("closing window")
+				defer view.Terminate()
+			}
+		},
+		Client:  network.NewHttpClient(),
+		Silence: *silence,
+	}
 
-	w.Navigate("file://" + index)
-	w.Run()
+	router.Routes(server, router.Opt{})
+
+	autho.Routes(server)
+	if *spaUI {
+		tempPathSpa = spa.Start(uiBuildFS)
+	}
+	server.Start("0.0.0.0:" + strconv.Itoa(*port))
+
+	// startup tasks and continuous threads
+	router.OnStartup(server, router.Opt{})
+
+	if *ui {
+		view, tempPathUI = webview.New(uiBuildFS)
+		go server.WaitClose()
+		view.Run()
+		server.Close(os.Interrupt)
+		return
+	}
+
+	server.WaitClose()
 }
