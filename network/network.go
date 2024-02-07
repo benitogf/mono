@@ -14,8 +14,13 @@ func IsValidIP(address string) bool {
 }
 
 func IsHostReachable(client *http.Client, address string) bool {
+	defer func() { recover() }()
 	res, err := client.Head("http://" + address)
-	return err == nil && res.StatusCode == 405
+	if err != nil {
+		return false
+	}
+	defer res.Body.Close()
+	return res.StatusCode == 405
 }
 
 // NewHttpClient returns and http client with sensible timeouts
