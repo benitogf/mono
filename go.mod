@@ -3,14 +3,14 @@ module github.com/benitogf/mono
 go 1.21.3
 
 require (
-	github.com/benitogf/ko v0.0.0-20231222032101-c6b34120d23c
-	github.com/benitogf/ooo v0.0.0-20231221081329-7ef80545ba53
+	github.com/benitogf/ko v0.0.0-20240207065000-c7a04eb1af62
+	github.com/benitogf/ooo v0.0.0-20240207045118-931a7b58d317
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tus/tusd v1.13.0
 	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.18.0
 )
 
 require (
@@ -30,6 +30,10 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.10.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	github.com/tidwall/gjson v1.17.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
