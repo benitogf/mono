@@ -33,6 +33,8 @@ var port = flag.Int("port", 8888, "service port")
 var silence = flag.Bool("silence", true, "silence output")
 var ui = flag.Bool("ui", false, "run with UI")
 var spaUI = flag.Bool("spa", true, "run with spa UI")
+var windowWidth = flag.Int("width", 800, "webview window width")
+var windowHeight = flag.Int("height", 600, "webview window height")
 
 func cleanup() {
 	if tempPathSpa != "" {
@@ -95,7 +97,7 @@ func main() {
 	router.OnStartup(server, router.Opt{})
 
 	if *ui {
-		view, tempPathUI = webview.New(uiBuildFS)
+		view, tempPathUI = webview.New(uiBuildFS, *windowWidth, *windowHeight)
 		go server.WaitClose()
 		view.Run()
 		server.Close(os.Interrupt)
