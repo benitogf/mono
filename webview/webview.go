@@ -9,7 +9,7 @@ import (
 	webview "github.com/webview/webview_go"
 )
 
-func New(content embed.FS) (webview.WebView, string) {
+func New(content embed.FS, width, height int) (webview.WebView, string) {
 	w := webview.New(true)
 
 	d, err := embeder.Expand(content, true)
@@ -21,7 +21,7 @@ func New(content embed.FS) (webview.WebView, string) {
 	// 	os.RemoveAll(d)
 	// }()
 
-	w.SetSize(480, 320, webview.HintNone)
+	w.SetSize(width, height, webview.HintNone)
 	index := filepath.Join(d, "build", "index.html")
 	log.Println("index", index)
 
