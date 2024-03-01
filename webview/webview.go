@@ -9,8 +9,8 @@ import (
 	webview "github.com/webview/webview_go"
 )
 
-func New(content embed.FS, width, height int) (webview.WebView, string) {
-	w := webview.New(true)
+func New(content embed.FS, width, height int, debug bool) (webview.WebView, string) {
+	w := webview.New(debug)
 
 	d, err := embeder.Expand(content, true)
 	if err != nil {
