@@ -35,6 +35,7 @@ var ui = flag.Bool("ui", false, "run with UI")
 var spaUI = flag.Bool("spa", true, "run with spa UI")
 var windowWidth = flag.Int("width", 800, "webview window width")
 var windowHeight = flag.Int("height", 600, "webview window height")
+var debugWebview = flag.Bool("debugWebview", false, "debug webview")
 
 func cleanup() {
 	if tempPathSpa != "" {
@@ -97,7 +98,7 @@ func main() {
 	router.OnStartup(server, router.Opt{})
 
 	if *ui {
-		view, tempPathUI = webview.New(uiBuildFS, *windowWidth, *windowHeight)
+		view, tempPathUI = webview.New(uiBuildFS, *windowWidth, *windowHeight, *debugWebview)
 		go server.WaitClose()
 		view.Run()
 		server.Close(os.Interrupt)
