@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/benitogf/mono/embeder"
@@ -49,7 +50,7 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
-func Start(frontPath embed.FS) string {
+func Start(frontPath embed.FS, port int) string {
 	tempPath, err := embeder.Expand(frontPath, false)
 	if err != nil {
 		log.Fatal(err)
@@ -62,7 +63,7 @@ func Start(frontPath embed.FS) string {
 
 	server := &http.Server{
 		Handler: router,
-		Addr:    "0.0.0.0:80",
+		Addr:    "0.0.0.0:" + strconv.Itoa(port),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
