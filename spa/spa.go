@@ -50,7 +50,7 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
-func Start(frontPath embed.FS, port int) string {
+func Start(frontPath embed.FS, folder string, port int) string {
 	tempPath, err := embeder.Expand(frontPath, false)
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +58,7 @@ func Start(frontPath embed.FS, port int) string {
 	// log.Println("spa server path:", tempPath)
 
 	router := mux.NewRouter()
-	spa := spaHandler{staticPath: tempPath + "/build", indexPath: "index.html"}
+	spa := spaHandler{staticPath: tempPath + "/" + folder, indexPath: "index.html"}
 	router.PathPrefix("/").Handler(spa)
 
 	server := &http.Server{

@@ -90,7 +90,7 @@ func main() {
 
 	autho.Routes(server)
 	if *spaUI {
-		tempPathSpa = spa.Start(uiBuildFS, 80)
+		tempPathSpa = spa.Start(uiBuildFS, "build", 80)
 	}
 	server.Start("0.0.0.0:" + strconv.Itoa(*port))
 
