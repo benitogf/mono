@@ -84,11 +84,12 @@ const Dashboard = ({ status, authorize, dispatch }) => {
 
     const [menuOpen, setMenuOpen] = useState(false)
 
-    // const pathname = location.pathname.split('/')
-    // const isDashboard = pathname.length === 2
-    // const isPoint = pathname.length === 4 && pathname[2] === 'point'
-    // const isVideos = pathname.length === 3 && pathname[2] === 'videos'
-    // const isSettings = pathname.length === 3 && pathname[2] === 'settings'
+    const pathname = location.pathname.split('/')
+    const isHome = pathname.length > 2 && pathname[2] === 'home'
+    const isSettings = pathname.length > 2 && pathname[2] === 'settings'
+    
+    const currentSection = isHome ? 'Home' : isSettings ? 'Settings' : 'Dashboard'
+    const filePath = window.location.protocol === 'file:' ? window.location.pathname.replace('index.html', '') : ''
 
     if (status === 'unauthorized') {
         return <Navigate to='/login' />
@@ -96,31 +97,41 @@ const Dashboard = ({ status, authorize, dispatch }) => {
 
     return <>
         <AppBar open={menuOpen}>
-            <Toolbar >
-                {!menuOpen && (
+            <Toolbar>
+                <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <IconButton
                         sx={{
                             color: 'white',
+                            marginLeft: '-11px',
+                            marginRight: 3,
+                            opacity: menuOpen ? 0 : 1,
+                            transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
+                            pointerEvents: menuOpen ? 'none' : 'auto',
                         }}
-                        onTouchStart={() => {
-                            setMenuOpen(true)
-                        }}
-                        onClick={() => {
-                            setMenuOpen(true)
-                        }}
+                        onClick={() => setMenuOpen(true)}
                     >
                         <MenuIcon />
                     </IconButton>
-                )}
+                    <Box
+                        component='img'
+                        alt='logo'
+                        src={filePath + '/logo.png'}
+                        sx={{
+                            height: 20,
+                            marginLeft: menuOpen ? '-56px' : 0,
+                            marginRight: 2,
+                            transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
+                        }}
+                    />
+                </Box>
                 <Box
                     sx={{
                         width: '100%',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
+                        justifyContent: 'flex-end',
                     }}
                 >
-                    <Box></Box>
                     <Box sx={{
                         fontSize: '0.9em',
                         maxWidth: '14em',
@@ -133,7 +144,7 @@ const Dashboard = ({ status, authorize, dispatch }) => {
         </AppBar>
 
         <Drawer variant={'permanent'} open={menuOpen} style={{ position: 'absolute' }}>
-            <Menu location={location} setOpen={setMenuOpen} open={menuOpen} />
+            <Menu location={location} setOpen={setMenuOpen} open={menuOpen} currentSection={currentSection} />
         </Drawer>
         <Container
             maxWidth={'xl'}

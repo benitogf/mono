@@ -2,7 +2,6 @@ import { useEffect, useRef, useLayoutEffect, useState } from 'react'
 import { domain, ssl } from './config'
 import ky from 'ky'
 import ooo from 'ooo-client'
-import * as tus from "tus-js-client"
 
 const protocol = ssl ? 'https://' : 'http://'
 export const prefixUrl = protocol + domain
@@ -251,37 +250,5 @@ export const authorize = async (dispatch, context) => {
     }
     dispatch({ type: "status", data: "authorized" })
 }
-
-export const upload = async (file, name, type) =>
-    new Promise((resolve, reject) => {
-        const token = window.localStorage.getItem('token')
-        console.log("TOKEN", token)
-        const upload = new tus.Upload(file, {
-            endpoint: prefixUrl + "/files/",
-            retryDelays: [0, 3000, 5000, 10000, 20000],
-            metadata: {
-                filename: name,
-                filetype: type
-            },
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-            onError: function (error) {
-                console.log("Failed because: " + error)
-                reject(error)
-            },
-            // onProgress: function (bytesUploaded, bytesTotal) {
-            //   var percentage = (bytesUploaded / bytesTotal * 100).toFixed(2)
-            //   console.log(bytesUploaded, bytesTotal, percentage + "%")
-            // },
-            onSuccess: function () {
-                // console.log("Download %s from %s", upload.file.name, upload.url)
-                resolve(upload.url)
-            }
-        })
-
-        // Start the upload
-        upload.start()
-    })
 
 export const useAuthorize = (dispatch) => (context) => authorize(dispatch, context)

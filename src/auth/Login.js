@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import WarningIcon from '@mui/icons-material/Warning'
-import LoadingButton from '@mui/lab/LoadingButton'
 import AppBar from '@mui/material/AppBar'
+import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -12,27 +12,11 @@ import TextField from '@mui/material/TextField'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { LinearProgress } from '@mui/material'
-import { makeStyles } from '@mui/styles'
 
 import { api } from '../api'
 
-const loginStyles = makeStyles((theme) => ({
-    warning: {
-        maxWidth: 'unset',
-        marginBottom: 10,
-        backgroundColor: '#f1932c',
-    },
-    warningText: {
-        fontSize: '0.96em',
-        fontWeight: 100,
-        lineHeight: 2,
-        color: 'white',
-    },
-}))
-
 const Login = ({ status, authorize }) => {
     const theme = useTheme()
-    const styles = loginStyles()
 
     const [rootAvailable, setRootAvailable] = useState(null)
     const [password, setPassword] = useState('')
@@ -154,11 +138,22 @@ const Login = ({ status, authorize }) => {
                 >
                     {error && !loading && (
                         <SnackbarContent
-                            className={styles.warning}
+                            sx={{
+                                maxWidth: 'unset',
+                                marginBottom: '10px',
+                                backgroundColor: '#f1932c',
+                            }}
                             message={
                                 <Box display='flex' alignItems='center' gap='.5rem'>
                                     <WarningIcon sx={{ color: '#f0cf81' }} />
-                                    <Typography className={styles.warningText}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.96em',
+                                            fontWeight: 100,
+                                            lineHeight: 2,
+                                            color: 'white',
+                                        }}
+                                    >
                                         {failType === '' ? 'Unable to authorize' : 'Login failed'}
                                     </Typography>
                                 </Box>
@@ -200,16 +195,15 @@ const Login = ({ status, authorize }) => {
                                     getHelperText(failType)
                                 }
                             />
-                            <LoadingButton
+                            <Button
                                 type='submit'
                                 variant='contained'
                                 color='primary'
-                                fullWidth
-                                loading={loading}
+                                disabled={loading || password === ''}
                                 onClick={login}
                             >
-                                Log in
-                            </LoadingButton>
+                                {loading ? 'Loading...' : 'Log in'}
+                            </Button>
                         </Box>
                     </form>
                 </CardContent>

@@ -1,43 +1,16 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import { makeStyles } from '@mui/styles'
-import { useTheme } from '@mui/material'
-
-const navStyles = makeStyles((theme) => ({
-    root: {
-        boxShadow: 'none',
-        zIndex: (props) => (props.mobile ? 1301 : ''),
-    },
-    link: {
-        // color: theme.palette.text.primary,
-        textDecoration: 'none',
-    },
-    logo: {
-        height: 20,
-        verticalAlign: 'middle',
-        marginRight: 34,
-        marginLeft: 1,
-        filter: (props) => (props.lights ? 'brightness(0.5)' : 'none'),
-    },
-}))
+import { Box } from '@mui/material'
 
 const Nav = () => {
-    const theme = useTheme()
-    const location = useLocation()
-    const mobile = theme.breakpoints.down('xs')
-    const styles = navStyles({
-        mobile,
-        location,
-    })
-
     const filePath = window.location.protocol === 'file:' ? window.location.pathname.replace('index.html', '') : ''
     return (
-        <AppBar component='nav' className={styles.root}>
+        <AppBar component='nav' sx={{ boxShadow: 'none' }}>
             <Toolbar>
-                <Link to={'/'} className={styles.link}>
+                <Link to={'/'} style={{ textDecoration: 'none' }}>
                     <Typography
                         variant='h6'
                         component='div'
@@ -50,7 +23,17 @@ const Nav = () => {
                             },
                         }}
                     >
-                        <img alt='logo' className={styles.logo} src={filePath + '/logo.png'}></img>
+                        <Box
+                            component='img'
+                            alt='logo'
+                            src={filePath + '/logo.png'}
+                            sx={{
+                                height: 20,
+                                verticalAlign: 'middle',
+                                marginRight: '34px',
+                                marginLeft: '1px',
+                            }}
+                        />
                     </Typography>
                 </Link>
             </Toolbar>

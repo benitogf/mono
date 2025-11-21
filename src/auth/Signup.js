@@ -13,7 +13,6 @@ import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
-import Hidden from '@mui/material/Hidden'
 import InputAdornment from '@mui/material/InputAdornment'
 import { validate, regex } from '../forms'
 
@@ -146,10 +145,8 @@ const Signup = ({ status, authorize }) => {
   }
 
   return (<Grid className={styles.container} container spacing={4}>
-    <Hidden xsDown>
-      <Grid item sm={6}>
-      </Grid>
-    </Hidden>
+    <Grid item sm={6} sx={{ display: { xs: 'none', sm: 'block' } }}>
+    </Grid>
     <Grid item xs={12} sm={6}>
       <Card className={styles.card}>
         <AppBar position="static" color="default" elevation={0}>

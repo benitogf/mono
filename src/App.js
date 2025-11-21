@@ -2,7 +2,7 @@ import React, { useReducer } from 'react'
 import { HashRouter, BrowserRouter, Routes, Route } from 'react-router-dom'
 import { blue } from '@mui/material/colors'
 import LinearProgress from '@mui/material/LinearProgress'
-import { createTheme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 // import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -125,24 +125,22 @@ const App = () => {
                     path='/dashboard/*'
                     element={<Dashboard status={status} authorize={authorize} dispatch={dispatch} />}
                 />
-                <Route component={R404} />
+                <Route path='*' element={<R404 />} />
             </Routes>
         </>
     }
 
     return (
         <ThemeProvider theme={theme}>
-            <StyledEngineProvider injectFirst>
-                <LocalizationProvider dateAdapter={AdapterMoment}>
-                    {isFileProto && <HashRouter>
-                        {routes()}
-                    </HashRouter>}
-                    { }
-                    {!isFileProto && <BrowserRouter>
-                        {routes()}
-                    </BrowserRouter>}
-                </LocalizationProvider>
-            </StyledEngineProvider>
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+                {isFileProto && <HashRouter>
+                    {routes()}
+                </HashRouter>}
+                { }
+                {!isFileProto && <BrowserRouter>
+                    {routes()}
+                </BrowserRouter>}
+            </LocalizationProvider>
         </ThemeProvider>
     )
 }

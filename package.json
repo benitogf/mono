@@ -2,46 +2,35 @@
     "name": "mono",
     "version": "0.1.0",
     "private": true,
+    "type": "module",
     "dependencies": {
-        "@emotion/react": "^11.11.3",
-        "@emotion/styled": "^11.9.3",
-        "@mui/icons-material": "^5.15.4",
-        "@mui/lab": "^5.0.0-alpha.160",
-        "@mui/material": "^5.15.4",
-        "@mui/styles": "^5.15.4",
-        "@mui/x-data-grid": "^6.18.7",
-        "@mui/x-date-pickers": "^6.19.0",
-        "js-base64": "^3.7.2",
-        "ky": "^1.2.0",
+        "@emotion/react": "^11.13.5",
+        "@emotion/styled": "^11.13.5",
+        "@mui/icons-material": "^7.3.5",
+        "@mui/lab": "^7.0.1-beta.19",
+        "@mui/material": "^7.3.5",
+        "@mui/styles": "^6.5.0",
+        "@mui/x-data-grid": "^8.19.0",
+        "@mui/x-date-pickers": "^8.19.0",
+        "ky": "^1.7.3",
         "lodash": "^4.17.21",
         "moment": "^2.30.1",
-        "node-sass": "^7.0.1",
         "ooo-client": "^1.0.0",
         "randomcolor": "^0.6.2",
-        "react": "^18.2.0",
-        "react-big-calendar": "^1.8.6",
-        "react-dnd": "^16.0.1",
-        "react-dnd-html5-backend": "^16.0.1",
-        "react-dom": "^18.2.0",
-        "react-perfect-scrollbar": "^1.5.8",
-        "react-router-dom": "^6.21.2",
-        "react-scripts": "5.0.1",
-        "react-virtualized-auto-sizer": "^1.0.20",
-        "react-window": "^1.8.10",
-        "tus-js-client": "^4.0.1",
-        "web-vitals": "^3.5.1"
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "react-router-dom": "^6.28.1"
+    },
+    "devDependencies": {
+        "@emotion/babel-plugin": "^11.13.5",
+        "@vitejs/plugin-react": "^4.3.4",
+        "sass": "^1.69.5",
+        "vite": "^6.0.1"
     },
     "scripts": {
-        "start": "react-scripts start",
-        "build": "react-scripts build",
-        "test": "react-scripts test",
-        "eject": "react-scripts eject"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
+        "start": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
     },
     "browserslist": {
         "production": [

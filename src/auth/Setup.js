@@ -8,7 +8,6 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
-import Hidden from '@mui/material/Hidden'
 import LinearProgress from '@mui/material/LinearProgress'
 import SnackbarContent from '@mui/material/SnackbarContent'
 import TextField from '@mui/material/TextField'
@@ -135,10 +134,8 @@ const Setup = ({ status, authorize }) => {
     }
 
     return <Grid className={styles.container} container spacing={4}>
-        <Hidden xsDown>
-            <Grid item sm={6}>
-            </Grid>
-        </Hidden>
+        <Grid item sm={6} sx={{ display: { xs: 'none', sm: 'block' } }}>
+        </Grid>
         <Grid item xs={12} sm={6}>
             <Card className={styles.card}>
                 <AppBar position="static" color="default" elevation={0}>

@@ -3,28 +3,34 @@ package webview
 import (
 	"embed"
 	"log"
-	"path/filepath"
+	"strconv"
 
-	"github.com/benitogf/mono/embeder"
+	"github.com/benitogf/mono/spa"
 	webview "github.com/webview/webview_go"
 )
 
-func New(content embed.FS, width, height int, debug bool) (webview.WebView, string) {
-	w := webview.New(debug)
+type Config struct {
+	Content        embed.FS
+	Width          int
+	Height         int
+	Debug          bool
+	SpaPort        int
+	ExistingServer string // tempPath from existing SPA server, empty if none
+}
 
-	d, err := embeder.Expand(content, true)
-	if err != nil {
-		log.Panic("Error expanding FS")
+func New(cfg Config) (webview.WebView, string) {
+	w := webview.New(cfg.Debug)
+
+	tempPath := cfg.ExistingServer
+	// If no tempPath provided, start a new SPA server
+	if tempPath == "" {
+		tempPath = spa.Start(cfg.Content, "build", cfg.SpaPort)
+		log.Println("Webview started SPA server on port", cfg.SpaPort)
+	} else {
+		log.Println("Webview reusing existing SPA server on port", cfg.SpaPort)
 	}
-	// defer func() {
-	// 	log.Println("removing directory")
-	// 	os.RemoveAll(d)
-	// }()
 
-	w.SetSize(width, height, webview.HintNone)
-	index := filepath.Join(d, "build", "index.html")
-	log.Println("index", index)
-
-	w.Navigate("file://" + index)
-	return w, d
+	w.SetSize(cfg.Width, cfg.Height, webview.HintNone)
+	w.Navigate("http://localhost:" + strconv.Itoa(cfg.SpaPort))
+	return w, tempPath
 }
