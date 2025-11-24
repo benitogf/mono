@@ -30,11 +30,14 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join internally call path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
 
+	// Debug logging
+	log.Println("SPA serving:", r.URL.Path, "->", path)
+
 	// check whether a file exists or is a directory at the given path
 	fi, err := os.Stat(path)
 	if os.IsNotExist(err) || fi.IsDir() {
 		// file does not exist or path is a directory, serve index.html
-		// log.Println("spa server: fallback", err)
+		log.Println("spa server: fallback to index.html for", r.URL.Path)
 		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
 		return
 	}
@@ -46,8 +49,29 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// otherwise, use http.FileServer to serve the static file
-	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+	// Set proper MIME types and headers for JavaScript modules
+	ext := filepath.Ext(path)
+	switch ext {
+	case ".js", ".mjs":
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+	case ".css":
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+	case ".json":
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	case ".wasm":
+		w.Header().Set("Content-Type", "application/wasm")
+	case ".html":
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	}
+
+	// Add cache control for static assets
+	if ext == ".js" || ext == ".css" || ext == ".woff" || ext == ".woff2" || ext == ".ttf" {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	}
+
+	// Serve the file directly to preserve our headers
+	http.ServeFile(w, r, path)
 }
 
 func Start(frontPath embed.FS, folder string, port int) string {

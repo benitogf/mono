@@ -3,13 +3,12 @@ module github.com/benitogf/mono
 go 1.21.3
 
 require (
+	github.com/Ghibranalj/webview_go v0.0.0-20251019170756-f933bf214be3
 	github.com/benitogf/ko v0.0.0-20240207065000-c7a04eb1af62
 	github.com/benitogf/ooo v0.0.0-20240207045118-931a7b58d317
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
 	github.com/stretchr/testify v1.8.4
-	github.com/tus/tusd v1.13.0
-	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
 	golang.org/x/crypto v0.18.0
 )
 
@@ -18,7 +17,6 @@ require (
 	github.com/benitogf/coat v0.0.0-20200402073050-ff807656cbec // indirect
 	github.com/benitogf/jsondiff v0.0.0-20220926080659-c3db9b84b559 // indirect
 	github.com/benitogf/jsonpatch v0.0.0-20220924150135-fc4b5c761ac7 // indirect
-	github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
@@ -34,6 +32,8 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
+	github.com/webview/webview_go v0.0.0-20240831120633-6173450d4dd6 // indirect
 	golang.org/x/net v0.20.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

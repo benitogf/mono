@@ -2,7 +2,6 @@ import { useEffect, useRef, useLayoutEffect, useState } from 'react'
 import { domain, ssl } from './config'
 import ky from 'ky'
 import ooo from 'ooo-client'
-import * as tus from "tus-js-client"
 
 const protocol = ssl ? 'https://' : 'http://'
 export const prefixUrl = protocol + domain
@@ -127,7 +126,7 @@ export const publish = async (url, data, authorize) => {
 
 export const usePublish = (url, authorize) => (data) => publish(url, data, authorize)
 
-export const useSubscribe = (url) => {
+export const useSubscribe = (url, onError) => {
     const [data, setData] = useState(null)
     const socket = useRef(null)
 
@@ -145,9 +144,14 @@ export const useSubscribe = (url) => {
             // }
             socket.current.onerror = (e) => {
                 console.warn("error:", url, e)
+                if (onError) {
+                    try {
+                        onError(e)
+                    } catch (err) {
+                        console.warn('useSubscribe onError handler failed', err)
+                    }
+                }
                 if (socket.current && socket.current.readyState !== WebSocket.CLOSED && socket.current.readyState !== WebSocket.CLOSING) {
-                    // socket.current.close()
-                    // socket.current = null
                     setData(null)
                 }
             }
@@ -212,6 +216,13 @@ export const authorize = async (dispatch, context) => {
         window.localStorage.setItem('account', profileRefresh.account)
         window.localStorage.setItem('role', profileRefresh.role)
     } catch (e) {
+        // Check if this is a network error (no response property)
+        if (!e.response) {
+            // Network error - server is unreachable
+            dispatch({ type: "status", data: "offline" })
+            throw e
+        }
+
         if (e && e.response && (e.response.status === 403 || e.response.status === 401)) {
             try {
                 // try to refresh the token
@@ -233,6 +244,12 @@ export const authorize = async (dispatch, context) => {
                 window.localStorage.setItem('token', refreshResponse.token)
                 window.localStorage.setItem('role', profileRefresh.role)
             } catch (e) {
+                // Check for network error in refresh attempt
+                if (!e.response) {
+                    dispatch({ type: "status", data: "offline" })
+                    throw e
+                }
+
                 if (e && e.response && e.response.status !== 304) {
                     // refresh token failed, clear everything
                     window.localStorage.setItem('account', '')
@@ -242,6 +259,13 @@ export const authorize = async (dispatch, context) => {
                 }
                 throw e
             }
+        } else {
+            // Other HTTP errors (not 401/403)
+            window.localStorage.setItem('account', '')
+            window.localStorage.setItem('token', '')
+            window.localStorage.setItem('role', '')
+            dispatch({ type: "status", data: "unauthorized" })
+            throw e
         }
     }
 
@@ -251,37 +275,5 @@ export const authorize = async (dispatch, context) => {
     }
     dispatch({ type: "status", data: "authorized" })
 }
-
-export const upload = async (file, name, type) =>
-    new Promise((resolve, reject) => {
-        const token = window.localStorage.getItem('token')
-        console.log("TOKEN", token)
-        const upload = new tus.Upload(file, {
-            endpoint: prefixUrl + "/files/",
-            retryDelays: [0, 3000, 5000, 10000, 20000],
-            metadata: {
-                filename: name,
-                filetype: type
-            },
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-            onError: function (error) {
-                console.log("Failed because: " + error)
-                reject(error)
-            },
-            // onProgress: function (bytesUploaded, bytesTotal) {
-            //   var percentage = (bytesUploaded / bytesTotal * 100).toFixed(2)
-            //   console.log(bytesUploaded, bytesTotal, percentage + "%")
-            // },
-            onSuccess: function () {
-                // console.log("Download %s from %s", upload.file.name, upload.url)
-                resolve(upload.url)
-            }
-        })
-
-        // Start the upload
-        upload.start()
-    })
 
 export const useAuthorize = (dispatch) => (context) => authorize(dispatch, context)

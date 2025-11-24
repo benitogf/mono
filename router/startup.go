@@ -5,5 +5,4 @@ import (
 )
 
 func OnStartup(server *ooo.Server, opt Opt) {
-	TusdDirInit()
 }

@@ -4,19 +4,20 @@ import (
 	"embed"
 	"flag"
 	"log"
+	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	wv "github.com/Ghibranalj/webview_go"
 	"github.com/benitogf/ko"
 	"github.com/benitogf/mono/auth"
-	"github.com/benitogf/mono/network"
 	"github.com/benitogf/mono/router"
 	"github.com/benitogf/mono/spa"
 	"github.com/benitogf/mono/webview"
 	"github.com/benitogf/ooo"
 	"github.com/gorilla/mux"
-	wv "github.com/webview/webview_go"
 )
 
 //go:embed build/*
@@ -30,12 +31,31 @@ var key = flag.String("key", "a-secret-key", "secret key for tokens")
 var dataPath = flag.String("dataPath", "db/data", "data storage path")
 var authPath = flag.String("authPath", "db/auth", "auth storage path")
 var port = flag.Int("port", 8888, "service port")
+var spaPort = flag.Int("spaPort", 80, "spa port")
 var silence = flag.Bool("silence", true, "silence output")
 var ui = flag.Bool("ui", false, "run with UI")
-var spaUI = flag.Bool("spa", true, "run with spa UI")
 var windowWidth = flag.Int("width", 800, "webview window width")
 var windowHeight = flag.Int("height", 600, "webview window height")
 var debugWebview = flag.Bool("debugWebview", false, "debug webview")
+
+func newHttpClient() *http.Client {
+	// https://github.com/golang/go/issues/24138
+	return &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   800 * time.Millisecond,
+				KeepAlive: 5 * time.Second,
+			}).Dial,
+			IdleConnTimeout:       10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			MaxConnsPerHost:       3000,
+			MaxIdleConns:          10000,
+			MaxIdleConnsPerHost:   1000,
+			DisableKeepAlives:     false,
+		},
+	}
+}
 
 func cleanup() {
 	if tempPathSpa != "" {
@@ -62,18 +82,18 @@ func main() {
 		authStore,
 	)
 
+	// Start SPA server (always on)
+	tempPathSpa = spa.Start(uiBuildFS, "build", *spaPort)
+
 	// Server
 	server := &ooo.Server{
-		ReadTimeout:    20 * time.Minute,
-		WriteTimeout:   20 * time.Minute,
-		IdleTimeout:    20 * time.Minute,
-		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-		AllowedHeaders: []string{"Authorization", "X-Requested-With", "X-Request-ID", "X-HTTP-Method-Override", "Upload-Length", "Upload-Offset", "Tus-Resumable", "Upload-Metadata", "Upload-Defer-Length", "Upload-Concat", "User-Agent", "Referrer", "Origin", "Content-Type", "Content-Length"},
-		ExposedHeaders: []string{"Upload-Offset", "Location", "Upload-Length", "Tus-Version", "Tus-Resumable", "Tus-Max-Size", "Tus-Extension", "Upload-Metadata", "Upload-Defer-Length", "Upload-Concat", "Location", "Upload-Offset", "Upload-Length"},
-		Router:         mux.NewRouter(),
-		Static:         true,
-		Workers:        2,
-		Storage:        &ko.Storage{Path: *dataPath},
+		ReadTimeout:  20 * time.Minute,
+		WriteTimeout: 20 * time.Minute,
+		IdleTimeout:  20 * time.Minute,
+		Router:       mux.NewRouter(),
+		Static:       true,
+		Workers:      2,
+		Storage:      &ko.Storage{Path: *dataPath},
 		OnClose: func() {
 			log.Println("going away")
 			cleanup()
@@ -82,23 +102,25 @@ func main() {
 				defer view.Terminate()
 			}
 		},
-		Client:  network.NewHttpClient(),
+		Client:  newHttpClient(),
 		Silence: *silence,
 	}
 
 	router.Routes(server, router.Opt{})
 
 	autho.Routes(server)
-	if *spaUI {
-		tempPathSpa = spa.Start(uiBuildFS, "build", 80)
-	}
 	server.Start("0.0.0.0:" + strconv.Itoa(*port))
 
 	// startup tasks and continuous threads
 	router.OnStartup(server, router.Opt{})
 
 	if *ui {
-		view, tempPathUI = webview.New(uiBuildFS, *windowWidth, *windowHeight, *debugWebview)
+		view = webview.New(webview.Config{
+			Width:   *windowWidth,
+			Height:  *windowHeight,
+			Debug:   *debugWebview,
+			SpaPort: *spaPort,
+		})
 		go server.WaitClose()
 		view.Run()
 		server.Close(os.Interrupt)

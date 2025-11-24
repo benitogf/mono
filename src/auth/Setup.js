@@ -1,106 +1,65 @@
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import InfoIcon from '@mui/icons-material/Info'
-import WarningIcon from '@mui/icons-material/Warning'
 import AppBar from '@mui/material/AppBar'
+import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import CircularProgress from '@mui/material/CircularProgress'
-import Grid from '@mui/material/Grid'
-import Hidden from '@mui/material/Hidden'
 import LinearProgress from '@mui/material/LinearProgress'
 import SnackbarContent from '@mui/material/SnackbarContent'
 import TextField from '@mui/material/TextField'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import { makeStyles } from '@mui/styles'
+import { useTheme } from '@mui/material/styles'
 
 import { api } from '../api'
-import { validate } from '../forms'
 
-const setupStyles = makeStyles((theme) => ({
-    container: {
-        flex: 1,
-        width: 'inherit',
-        margin: 0,
-        padding: 0,
-        background: 'transparent'
-    },
-    card: {
-        maxWidth: '400px',
-        margin: '84px auto'
-    },
-    warning: {
-        backgroundColor: '#f1932c',
-        maxWidth: 'unset',
-        marginBottom: 10
-    },
-    fail: {
-        backgroundColor: 'brown',
-        maxWidth: 'unset',
-        marginBottom: 10
-    },
-    warningText: {
-        color: 'white',
-        fontSize: '0.96em',
-        lineHeight: 2,
-        fontWeight: 100
-    },
-    warningIcon: {
-        verticalAlign: "bottom",
-        color: "#f0cf81"
-    },
-    formButton: {
-        marginTop: "20px"
-    },
-    formButtonWrapper: {
-        position: 'relative',
-    },
-    formProgress: {
-        position: 'absolute',
-        top: '67%',
-        left: '50%',
-        marginTop: -12,
-        marginLeft: -12,
-    }
-}))
-
-const Setup = ({ status, authorize }) => {
-    const styles = setupStyles()
+const Setup = ({ isAuthenticated, authorize }) => {
+    const theme = useTheme()
     const [password, setPassword] = useState('')
-    const [fail, setFail] = useState('')
-    const [submitted, setSubmitted] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(false)
+    const [failType, setFailType] = useState('')
     const [fetched, setFetched] = useState(null)
 
-    const fields = {
-        password: {
-            error: () => password.length < 3 || password.length > 88,
-            message: 'password must have between 3 and 88 characters'
-        },
-    }
-
     const signup = async () => {
-        setSubmitted(true)
-        if (!validation.error) {
-            setLoading(true)
-            try {
-                const response = await api.post('register', {
-                    json: {
-                        account: 'root',
-                        password,
-                        name: 'root',
-                    }
-                }).json()
-                window.localStorage.setItem('account', 'root')
-                window.localStorage.setItem('token', response.token)
-                window.localStorage.setItem('role', 'root')
-                await authorize()
-            } catch (e) {
-                setFail(`Something went wrong (${e && e.response ? await e.response.text() : 'unable to connect to the server'})`)
-                setLoading(false)
+        // Validate password
+        if (password === '') {
+            setError(true)
+            setFailType('emptyPwd')
+            return
+        }
+
+        if (password.length < 3 || password.length > 88) {
+            setError(true)
+            setFailType('invalidPwd')
+            return
+        }
+
+        setError(false)
+        setLoading(true)
+
+        try {
+            const response = await api.post('register', {
+                json: {
+                    account: 'root',
+                    password,
+                    name: 'root',
+                }
+            }).json()
+            window.localStorage.setItem('account', 'root')
+            window.localStorage.setItem('token', response.token)
+            window.localStorage.setItem('role', 'root')
+            await authorize()
+        } catch (e) {
+            if (!e.response) {
+                setFailType('networkError')
+            } else {
+                setFailType('serverError')
             }
+            setError(true)
+            setLoading(false)
         }
     }
 
@@ -117,16 +76,48 @@ const Setup = ({ status, authorize }) => {
 
     checkRoot()
 
-    const validation = validate(fields)
-
-    if (fetched === null) {
-        return <LinearProgress style={{
-            flex: 1,
-            marginTop: '89px',
-        }} />
+    const getHelperText = (failType) => {
+        let error = ''
+        switch (failType) {
+            case 'emptyPwd':
+                error = 'Password is required.'
+                break
+            case 'invalidPwd':
+                error = 'Password must have between 3 and 88 characters.'
+                break
+            case 'serverError':
+                error = 'Something went wrong. Please try again.'
+                break
+            case 'networkError':
+                error = 'Cannot connect to server.'
+                break
+            default:
+                error = ''
+        }
+        return error
     }
 
-    if (status === 'authorized') {
+    if (fetched === null) {
+        return (
+            <Box sx={{ 
+                height: '100%', 
+                width: '100%',
+                backgroundColor: theme.palette.background.default 
+            }}>
+                <LinearProgress 
+                    sx={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0,
+                        zIndex: (theme) => theme.zIndex.drawer + 3
+                    }} 
+                />
+            </Box>
+        )
+    }
+
+    if (isAuthenticated) {
         return <Navigate to="/dashboard" />
     }
 
@@ -134,86 +125,102 @@ const Setup = ({ status, authorize }) => {
         return <Navigate to="/dashboard" />
     }
 
-    return <Grid className={styles.container} container spacing={4}>
-        <Hidden xsDown>
-            <Grid item sm={6}>
-            </Grid>
-        </Hidden>
-        <Grid item xs={12} sm={6}>
-            <Card className={styles.card}>
-                <AppBar position="static" color="default" elevation={0}>
-                    <Toolbar variant="dense">
-                        <Typography component="h4">
-                            Setup
-                        </Typography>
+    return (
+        <Box
+            component='main'
+            sx={{
+                width: '100%',
+                padding: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                backgroundColor: theme.palette.background.default,
+            }}
+        >
+            <Toolbar />
+
+            <Card
+                sx={{
+                    marginTop: '5rem',
+                    minWidth: '22.5rem',
+                }}
+            >
+                <AppBar 
+                    position='static' 
+                    elevation={0}
+                    sx={{
+                        backgroundColor: theme.palette.action.hover,
+                    }}
+                >
+                    <Toolbar variant='dense'>
+                        <Typography component='h4' sx={{ color: theme.palette.text.primary }}>Setup</Typography>
                     </Toolbar>
                 </AppBar>
                 <CardContent>
-                    {fail && !loading && (
-                        <SnackbarContent className={styles.fail}
-                            message={(
-                                <Typography component="p" className={styles.warningText}>
-                                    <WarningIcon className={styles.warningIcon} /> {fail}
-                                </Typography>
-                            )}
-                        />
-                    )}
-                    {validation.error && submitted && (
-                        <SnackbarContent className={styles.warning}
-                            message={(Object.keys(validation.errors).map((error, key) => validation.errors[error] !== '' ? (
-                                <Typography key={key} component="p" className={styles.warningText}>
-                                    <WarningIcon className={styles.warningIcon} /> {validation.errors[error]}
-                                </Typography>) : null)
-                            )}
-                        />
-                    )}
                     <SnackbarContent
-                        style={{
-                            backgroundColor: 'rgb(96 96 96)',
+                        sx={{
                             maxWidth: 'unset',
+                            marginBottom: '10px',
+                            backgroundColor: theme.palette.info.main,
                         }}
-                        action={[]}
-                        message={(
-                            <Typography component="p" style={{ color: '#c3c3c3' }}>
-                                <InfoIcon style={{ verticalAlign: "bottom", color: "rgb(197 206 207)" }} />
-                                In order to access the system you must create a password
-                            </Typography>
-                        )}
+                        message={
+                            <Box display='flex' alignItems='center' gap='.5rem'>
+                                <InfoIcon />
+                                <Typography sx={{ fontSize: '0.96em', lineHeight: 2, fontWeight: 100 }}>
+                                    In order to access the system you must create a password
+                                </Typography>
+                            </Box>
+                        }
                     />
-                    <form onSubmit={(e) => { e.preventDefault() }}
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                        }}
                         noValidate
-                        autoComplete="off">
-                        <TextField
-                            required
-                            InputLabelProps={{ shrink: true }}
-                            margin="dense"
-                            id="password"
-                            label="password"
-                            type="password"
-                            fullWidth
-                            variant="outlined"
-                            onChange={(e) => setPassword(e.target.value)}
-                            value={password}
-                            disabled={loading}
-                            error={fields.password.error() && submitted}
-                        />
-                        <div className={styles.formButtonWrapper}>
-                            <Button className={styles.formButton}
-                                variant="contained"
+                        autoComplete='off'
+                    >
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '1rem',
+                            }}
+                        >
+                            <TextField
+                                required
+                                InputLabelProps={{ shrink: true }}
+                                size='small'
+                                id='password'
+                                label='Password'
+                                type='password'
                                 fullWidth
-                                type="submit"
-                                color="primary"
+                                margin='dense'
+                                variant='outlined'
+                                onChange={(e) => setPassword(e.target.value)}
+                                value={password}
                                 disabled={loading}
-                                onClick={signup}>
-                                Create password
+                                error={error && (failType === 'emptyPwd' || failType === 'invalidPwd' || failType === 'serverError' || failType === 'networkError')}
+                                helperText={
+                                    error &&
+                                    (failType === 'emptyPwd' || failType === 'invalidPwd' || failType === 'serverError' || failType === 'networkError') &&
+                                    getHelperText(failType)
+                                }
+                            />
+                            <Button
+                                type='submit'
+                                variant='contained'
+                                color='primary'
+                                disabled={loading || password === ''}
+                                onClick={signup}
+                            >
+                                {loading ? 'Loading...' : 'Create password'}
                             </Button>
-                            {loading && <CircularProgress size={24} className={styles.formProgress} />}
-                        </div>
+                        </Box>
                     </form>
                 </CardContent>
             </Card>
-        </Grid>
-    </Grid>
+        </Box>
+    )
 }
 
 export default Setup

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import WarningIcon from '@mui/icons-material/Warning'
-import LoadingButton from '@mui/lab/LoadingButton'
 import AppBar from '@mui/material/AppBar'
+import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -12,27 +12,11 @@ import TextField from '@mui/material/TextField'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { LinearProgress } from '@mui/material'
-import { makeStyles } from '@mui/styles'
 
 import { api } from '../api'
 
-const loginStyles = makeStyles((theme) => ({
-    warning: {
-        maxWidth: 'unset',
-        marginBottom: 10,
-        backgroundColor: '#f1932c',
-    },
-    warningText: {
-        fontSize: '0.96em',
-        fontWeight: 100,
-        lineHeight: 2,
-        color: 'white',
-    },
-}))
-
-const Login = ({ status, authorize }) => {
+const Login = ({ isAuthenticated, authorize }) => {
     const theme = useTheme()
-    const styles = loginStyles()
 
     const [rootAvailable, setRootAvailable] = useState(null)
     const [password, setPassword] = useState('')
@@ -46,7 +30,13 @@ const Login = ({ status, authorize }) => {
                 await api.get('available?account=root')
                 setRootAvailable(true)
             } catch (e) {
-                setRootAvailable(false)
+                // Only treat as "root not available" when the server actually responds
+                // with an HTTP error. If there is no response, it's likely a network
+                // issue (e.g. backend down), so keep the state as null to allow
+                // future retries once the server is reachable.
+                if (e && e.response) {
+                    setRootAvailable(false)
+                }
             }
         }
     }
@@ -73,13 +63,18 @@ const Login = ({ status, authorize }) => {
                 window.localStorage.setItem('role', response.role)
                 await authorize()
             } catch (e) {
-                const statusCode = await e.response.status
-                switch (statusCode) {
-                    case 403:
-                        setFailType('wrongPwd')
-                        break
-                    default:
-                        setFailType('')
+                // Check if this is a network error (no response)
+                if (!e.response) {
+                    setFailType('networkError')
+                } else {
+                    const statusCode = await e.response.status
+                    switch (statusCode) {
+                        case 403:
+                            setFailType('wrongPwd')
+                            break
+                        default:
+                            setFailType('')
+                    }
                 }
                 console.warn('nope', e)
                 setPassword('')
@@ -101,13 +96,16 @@ const Login = ({ status, authorize }) => {
             case 'wrongPwd':
                 error = 'Wrong password.'
                 break
+            case 'networkError':
+                error = 'Cannot connect to server.'
+                break
             default:
                 error = ''
         }
         return error
     }
 
-    if (status === 'authorized') {
+    if (isAuthenticated) {
         return <Navigate to='/dashboard' />
     }
 
@@ -128,7 +126,7 @@ const Login = ({ status, authorize }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                backgroundColor: theme.palette.mode === 'light' ? '#edf2f4' : '#4f4f4f',
+                backgroundColor: theme.palette.background.default,
             }}
         >
             <Toolbar />
@@ -139,9 +137,15 @@ const Login = ({ status, authorize }) => {
                     minWidth: '22.5rem',
                 }}
             >
-                <AppBar position='static' color='default' elevation={0}>
+                <AppBar
+                    position='static'
+                    elevation={0}
+                    sx={{
+                        backgroundColor: theme.palette.action.hover,
+                    }}
+                >
                     <Toolbar variant='dense'>
-                        <Typography component='h4'>Log in</Typography>
+                        <Typography component='h4' sx={{ color: theme.palette.text.primary }}>Log in</Typography>
                     </Toolbar>
                 </AppBar>
 
@@ -154,11 +158,22 @@ const Login = ({ status, authorize }) => {
                 >
                     {error && !loading && (
                         <SnackbarContent
-                            className={styles.warning}
+                            sx={{
+                                maxWidth: 'unset',
+                                marginBottom: '10px',
+                                backgroundColor: '#f1932c',
+                            }}
                             message={
                                 <Box display='flex' alignItems='center' gap='.5rem'>
                                     <WarningIcon sx={{ color: '#f0cf81' }} />
-                                    <Typography className={styles.warningText}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.96em',
+                                            fontWeight: 100,
+                                            lineHeight: 2,
+                                            color: 'white',
+                                        }}
+                                    >
                                         {failType === '' ? 'Unable to authorize' : 'Login failed'}
                                     </Typography>
                                 </Box>
@@ -193,23 +208,22 @@ const Login = ({ status, authorize }) => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 value={password}
                                 disabled={loading}
-                                error={error && (failType === 'emptyPwd' || failType === 'wrongPwd')}
+                                error={error && (failType === 'emptyPwd' || failType === 'wrongPwd' || failType === 'networkError')}
                                 helperText={
                                     error &&
-                                    (failType === 'emptyPwd' || failType === 'wrongPwd') &&
+                                    (failType === 'emptyPwd' || failType === 'wrongPwd' || failType === 'networkError') &&
                                     getHelperText(failType)
                                 }
                             />
-                            <LoadingButton
+                            <Button
                                 type='submit'
                                 variant='contained'
                                 color='primary'
-                                fullWidth
-                                loading={loading}
+                                disabled={loading || password === ''}
                                 onClick={login}
                             >
-                                Log in
-                            </LoadingButton>
+                                {loading ? 'Loading...' : 'Log in'}
+                            </Button>
                         </Box>
                     </form>
                 </CardContent>

@@ -1,30 +1,21 @@
 package webview
 
 import (
-	"embed"
-	"log"
-	"path/filepath"
+	"strconv"
 
-	"github.com/benitogf/mono/embeder"
-	webview "github.com/webview/webview_go"
+	webview "github.com/Ghibranalj/webview_go"
 )
 
-func New(content embed.FS, width, height int, debug bool) (webview.WebView, string) {
-	w := webview.New(debug)
+type Config struct {
+	Width   int
+	Height  int
+	Debug   bool
+	SpaPort int
+}
 
-	d, err := embeder.Expand(content, true)
-	if err != nil {
-		log.Panic("Error expanding FS")
-	}
-	// defer func() {
-	// 	log.Println("removing directory")
-	// 	os.RemoveAll(d)
-	// }()
-
-	w.SetSize(width, height, webview.HintNone)
-	index := filepath.Join(d, "build", "index.html")
-	log.Println("index", index)
-
-	w.Navigate("file://" + index)
-	return w, d
+func New(cfg Config) webview.WebView {
+	w := webview.New(cfg.Debug)
+	w.SetSize(cfg.Width, cfg.Height, webview.HintNone)
+	w.Navigate("http://localhost:" + strconv.Itoa(cfg.SpaPort))
+	return w
 }
