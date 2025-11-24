@@ -11,7 +11,6 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import Skeleton from '@mui/material/Skeleton'
-import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { Box, useTheme } from '@mui/material'
 
@@ -52,28 +51,28 @@ export default memo(({ open, setOpen, currentSection, active }) => {
             }
         }}
     >
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'space-between', 
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
             height: '100%'
         }}>
             <Box>
                 <List sx={{ padding: 0 }}>
-                    <ListItem sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
+                    <ListItem sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                         minHeight: 56,
                         [theme.breakpoints.up('sm')]: {
                             minHeight: 64,
                         }
                     }}>
-                        <Typography 
-                            sx={{ 
-                                fontWeight: 700, 
-                                fontSize: '1.1rem', 
-                                marginLeft: 2, 
+                        <Typography
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                marginLeft: 2,
                                 textTransform: 'uppercase',
                                 opacity: open ? 1 : 0,
                                 transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
@@ -82,7 +81,7 @@ export default memo(({ open, setOpen, currentSection, active }) => {
                         >
                             {currentSection}
                         </Typography>
-                        <IconButton 
+                        <IconButton
                             onClick={() => setOpen(false)}
                             sx={{
                                 opacity: open ? 1 : 0,
@@ -114,7 +113,7 @@ export default memo(({ open, setOpen, currentSection, active }) => {
                                             sx={{ cursor: 'pointer' }}
                                         >
                                             <ListItemIcon><Icon /></ListItemIcon>
-                                            <ListItemText 
+                                            <ListItemText
                                                 primary={route.section}
                                                 slotProps={{
                                                     primary: {
@@ -128,7 +127,7 @@ export default memo(({ open, setOpen, currentSection, active }) => {
                                             <ListItemIcon>
                                                 <Skeleton variant="circular" width={24} height={24} />
                                             </ListItemIcon>
-                                            <ListItemText 
+                                            <ListItemText
                                                 primary={<Skeleton variant="text" width="60%" />}
                                             />
                                         </ListItem>

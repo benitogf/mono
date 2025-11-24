@@ -4,7 +4,7 @@ A full-stack boilerplate combining a Go backend with a React 19 frontend, design
 
 ## Features
 
-- **React 19** with Material-UI v7 and Vite 6
+- **React 19** with Material-UI v7 and Vite 7
 - **Go backend** with JWT authentication and embedded frontend
 - **Dual deployment**: Web server or native desktop window
 - **Modern tooling**: ES modules, code splitting, hot reload
@@ -12,10 +12,12 @@ A full-stack boilerplate combining a Go backend with a React 19 frontend, design
 
 ## Tech Stack
 
-**Frontend**: React 19, MUI v7, Vite 6, Emotion, React Router  
-**Backend**: Go, Gorilla Mux, JWT, embedded FS, webview
+**Frontend**: React 19, MUI v7, Vite 7, Emotion, React Router  
+**Backend**: Go, Gorilla Mux, JWT, embedded FS, webview, leveldb
 
 ## Quickstart
+
+> Note: Vite 7 requires **Node.js 20.19+** or **22.12+**.
 
 ```bash
 # Download and extract into current directory
@@ -32,11 +34,11 @@ npm run build
 # Install webview dependencies
 apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 
-# Run as web application (port 8888)
-go run main.go -ui=false -spa=true
+# Run as web application (API + embedded SPA on spaPort)
+go run main.go -ui=false
 
-# Run as desktop application
-go run main.go -ui=true -spa=false
+# Run as desktop application (opens webview window pointing to SPA)
+go run main.go -ui=true
 
 # Build single binary
 go build
@@ -50,5 +52,5 @@ go build
 npm start
 
 # Backend dev server
-go run main.go -ui=false -spa=false -port=8888
+go run main.go -ui=false -port=8888
 ```

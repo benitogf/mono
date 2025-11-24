@@ -5,6 +5,7 @@ import Box from '@mui/material/Box'
 import CssBaseline from '@mui/material/CssBaseline'
 import Drawer from '@mui/material/Drawer'
 import LinearProgress from '@mui/material/LinearProgress'
+import Snackbar from '@mui/material/Snackbar'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -48,8 +49,10 @@ const App = () => {
     const { lights, status } = state
     const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
-    
-    const [time, timeSocket] = useSubscribe(null)
+
+    const [time, timeSocket] = useSubscribe(null, () => {
+        dispatch({ type: 'status', data: 'offline' })
+    })
     const socketActive = timeSocket && timeSocket.readyState === WebSocket.OPEN
     const [active, setActive] = useState(false)
     const [minLoadTimePassed, setMinLoadTimePassed] = useState(false)
@@ -70,6 +73,19 @@ const App = () => {
             setActive(false)
         }
     }, [socketActive, minLoadTimePassed])
+
+    // When coming back from offline and the socket is active again, try to re-authorize
+    useEffect(() => {
+        if (socketActive && status === 'offline') {
+            ; (async () => {
+                try {
+                    await authorize()
+                } catch (e) {
+                    console.warn(e)
+                }
+            })()
+        }
+    }, [socketActive, status])
 
     const timer = AutoLogout(autoLogoutTime, status === 'authorized')
     window.onstorage = async () => {
@@ -175,76 +191,102 @@ const App = () => {
     if (!status && account !== '') {
         return (
             <ThemeProvider theme={theme}>
-                <Box sx={{ 
-                    height: '100%', 
-                    width: '100%',
-                    backgroundColor: theme.palette.background.default 
-                }}>
-                    <LinearProgress 
-                        sx={{ 
-                            position: 'fixed', 
-                            top: 0, 
-                            left: 0, 
+                <Box
+                    sx={{
+                        height: '100%',
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        backgroundColor: theme.palette.background.default,
+                    }}
+                >
+                    <LinearProgress
+                        sx={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
                             right: 0,
-                            zIndex: (theme) => theme.zIndex.drawer + 3
-                        }} 
+                            zIndex: (theme) => theme.zIndex.drawer + 3,
+                        }}
                     />
                 </Box>
             </ThemeProvider>
         )
     }
 
-    const isAuthenticated = status === 'authorized'
+    const isAuthenticated =
+        status === 'authorized' ||
+        (status === 'offline' && account && role)
 
     const routes = () => {
-        return <Routes>
-            <Route exact path='/' element={<Login isAuthenticated={isAuthenticated} authorize={authorize} />} />
-            <Route exact path='/logout' element={<Logout dispatch={dispatch} />} />
-            <Route exact path='/login' element={<Login isAuthenticated={isAuthenticated} authorize={authorize} />} />
-            <Route exact path='/setup' element={<Setup isAuthenticated={isAuthenticated} authorize={authorize} />} />
-            <Route
-                path='/dashboard/*'
-                element={<Dashboard isAuthenticated={isAuthenticated} active={active} time={time} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-            />
-            <Route path='*' element={<R404 />} />
-        </Routes>
+        return (
+            <Routes>
+                <Route exact path='/' element={<Login isAuthenticated={isAuthenticated} authorize={authorize} />} />
+                <Route exact path='/logout' element={<Logout dispatch={dispatch} />} />
+                <Route exact path='/login' element={<Login isAuthenticated={isAuthenticated} authorize={authorize} />} />
+                <Route exact path='/setup' element={<Setup isAuthenticated={isAuthenticated} authorize={authorize} />} />
+                <Route
+                    path='/dashboard/*'
+                    element={<Dashboard isAuthenticated={isAuthenticated} active={active} time={time} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+                />
+                <Route path='*' element={<R404 />} />
+            </Routes>
+        )
     }
 
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Box sx={{ 
-                height: '100%', 
+            <Box sx={{
+                height: '100%',
                 width: '100%',
-                backgroundColor: theme.palette.background.default 
+                backgroundColor: theme.palette.background.default
             }}>
                 <LocalizationProvider dateAdapter={AdapterMoment}>
-                        <BrowserRouter>
-                            {/* Unified Navbar - always rendered */}
-                            <Navbar 
-                                isAuthenticated={isAuthenticated}
-                                active={active}
-                                menuOpen={menuOpen}
-                                onMenuOpen={() => setMenuOpen(true)}
-                                onSettingsClick={() => setSettingsDrawerOpen(true)}
-                            />
-                            {routes()}
-                            
-                            {/* Global Settings Drawer */}
-                            <Drawer
-                                anchor='right'
-                                open={settingsDrawerOpen}
-                                onClose={() => setSettingsDrawerOpen(false)}
+                    <BrowserRouter>
+                        {!socketActive && (
+                            <LinearProgress
                                 sx={{
-                                    zIndex: (theme) => theme.zIndex.drawer + 2,
-                                    '& .MuiDrawer-paper': {
-                                        zIndex: (theme) => theme.zIndex.drawer + 2,
-                                    }
+                                    position: 'fixed',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: (theme) => theme.zIndex.drawer + 3,
                                 }}
-                            >
-                                <SettingsDrawer dispatch={dispatch} isAuthenticated={isAuthenticated} onClose={() => setSettingsDrawerOpen(false)} />
-                            </Drawer>
-                        </BrowserRouter>
+                            />
+                        )}
+                        <Snackbar
+                            open={status === 'offline'}
+                            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                            message='Cannot connect to server. Retrying...'
+                        />
+                        {/* Unified Navbar - always rendered */}
+                        <Navbar
+                            isAuthenticated={isAuthenticated}
+                            active={active}
+                            menuOpen={menuOpen}
+                            onMenuOpen={() => setMenuOpen(true)}
+                            onSettingsClick={() => setSettingsDrawerOpen(true)}
+                        />
+                        {routes()}
+
+                        {/* Global Settings Drawer */}
+                        <Drawer
+                            anchor='right'
+                            open={settingsDrawerOpen}
+                            onClose={() => setSettingsDrawerOpen(false)}
+                            sx={{
+                                zIndex: (theme) => theme.zIndex.drawer + 2,
+                                '& .MuiDrawer-paper': {
+                                    zIndex: (theme) => theme.zIndex.drawer + 2,
+                                }
+                            }}
+                        >
+                            <SettingsDrawer dispatch={dispatch} isAuthenticated={isAuthenticated} onClose={() => setSettingsDrawerOpen(false)} />
+                        </Drawer>
+                    </BrowserRouter>
                 </LocalizationProvider>
             </Box>
         </ThemeProvider>

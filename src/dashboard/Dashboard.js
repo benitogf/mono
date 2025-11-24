@@ -1,7 +1,6 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import Box from '@mui/material/Box'
-import LinearProgress from '@mui/material/LinearProgress'
 import MuiDrawer from '@mui/material/Drawer'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme, styled } from '@mui/material/styles'
@@ -12,7 +11,7 @@ import Footer from './Footer'
 
 const drawerWidth = 240
 
-const View = (menuOpen, theme) => ({
+const View = (theme) => ({
     color: 'text.primary',
     p: 0,
     transition: theme.transitions.create(['width', 'margin'], {
@@ -66,33 +65,22 @@ const Dashboard = ({ isAuthenticated, active, time, menuOpen, setMenuOpen }) => 
     }
 
     return <>
-        {!active && (
-            <LinearProgress 
-                sx={{ 
-                    position: 'fixed', 
-                    top: 0, 
-                    left: 0, 
-                    right: 0,
-                    zIndex: (theme) => theme.zIndex.drawer + 3
-                }} 
-            />
-        )}
         <Drawer variant={'permanent'} open={menuOpen}>
             <Menu location={location} setOpen={setMenuOpen} open={menuOpen} currentSection={currentSection} active={active} />
         </Drawer>
 
         <Box
-            sx={{ 
+            sx={{
                 paddingLeft: '56px',
                 marginTop: mobile ? '56px' : '64px',
                 height: mobile ? 'calc(100vh - 56px - 48px)' : 'calc(100vh - 64px - 48px)',
                 overflow: 'auto'
             }}
         >
-            <Box 
-                component='main' 
+            <Box
+                component='main'
                 sx={{
-                    ...View(menuOpen, theme),
+                    ...View(theme),
                     maxWidth: '1920px',
                     margin: '0 auto',
                     background: theme.palette.background.default,

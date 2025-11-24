@@ -126,7 +126,7 @@ export const publish = async (url, data, authorize) => {
 
 export const usePublish = (url, authorize) => (data) => publish(url, data, authorize)
 
-export const useSubscribe = (url) => {
+export const useSubscribe = (url, onError) => {
     const [data, setData] = useState(null)
     const socket = useRef(null)
 
@@ -144,9 +144,14 @@ export const useSubscribe = (url) => {
             // }
             socket.current.onerror = (e) => {
                 console.warn("error:", url, e)
+                if (onError) {
+                    try {
+                        onError(e)
+                    } catch (err) {
+                        console.warn('useSubscribe onError handler failed', err)
+                    }
+                }
                 if (socket.current && socket.current.readyState !== WebSocket.CLOSED && socket.current.readyState !== WebSocket.CLOSING) {
-                    // socket.current.close()
-                    // socket.current = null
                     setData(null)
                 }
             }
@@ -214,13 +219,10 @@ export const authorize = async (dispatch, context) => {
         // Check if this is a network error (no response property)
         if (!e.response) {
             // Network error - server is unreachable
-            window.localStorage.setItem('account', '')
-            window.localStorage.setItem('token', '')
-            window.localStorage.setItem('role', '')
-            dispatch({ type: "status", data: "unauthorized" })
+            dispatch({ type: "status", data: "offline" })
             throw e
         }
-        
+
         if (e && e.response && (e.response.status === 403 || e.response.status === 401)) {
             try {
                 // try to refresh the token
@@ -244,13 +246,10 @@ export const authorize = async (dispatch, context) => {
             } catch (e) {
                 // Check for network error in refresh attempt
                 if (!e.response) {
-                    window.localStorage.setItem('account', '')
-                    window.localStorage.setItem('token', '')
-                    window.localStorage.setItem('role', '')
-                    dispatch({ type: "status", data: "unauthorized" })
+                    dispatch({ type: "status", data: "offline" })
                     throw e
                 }
-                
+
                 if (e && e.response && e.response.status !== 304) {
                     // refresh token failed, clear everything
                     window.localStorage.setItem('account', '')

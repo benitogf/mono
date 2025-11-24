@@ -30,7 +30,13 @@ const Login = ({ isAuthenticated, authorize }) => {
                 await api.get('available?account=root')
                 setRootAvailable(true)
             } catch (e) {
-                setRootAvailable(false)
+                // Only treat as "root not available" when the server actually responds
+                // with an HTTP error. If there is no response, it's likely a network
+                // issue (e.g. backend down), so keep the state as null to allow
+                // future retries once the server is reachable.
+                if (e && e.response) {
+                    setRootAvailable(false)
+                }
             }
         }
     }
@@ -131,8 +137,8 @@ const Login = ({ isAuthenticated, authorize }) => {
                     minWidth: '22.5rem',
                 }}
             >
-                <AppBar 
-                    position='static' 
+                <AppBar
+                    position='static'
                     elevation={0}
                     sx={{
                         backgroundColor: theme.palette.action.hover,

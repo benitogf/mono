@@ -31,12 +31,12 @@ const StyledAppBar = styled(AppBar, {
     }),
 }))
 
-const Navbar = ({ 
+const Navbar = ({
     isAuthenticated,
     active = true,
-    menuOpen, 
-    onMenuOpen, 
-    onSettingsClick 
+    menuOpen,
+    onMenuOpen,
+    onSettingsClick
 }) => {
     const filePath = window.location.protocol === 'file:' ? window.location.pathname.replace('index.html', '') : ''
 
@@ -47,19 +47,60 @@ const Navbar = ({
                     // Authenticated: Show menu button and logo
                     <>
                         <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                            <IconButton
+                            <Box
                                 sx={{
-                                    color: 'white',
+                                    position: 'relative',
+                                    width: 40,
+                                    height: 40,
                                     marginLeft: '-11px',
                                     marginRight: 3,
-                                    opacity: menuOpen ? 0 : 1,
-                                    transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
-                                    pointerEvents: menuOpen ? 'none' : 'auto',
                                 }}
-                                onClick={onMenuOpen}
                             >
-                                <MenuIcon />
-                            </IconButton>
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        opacity: active && !menuOpen ? 1 : 0,
+                                        transition: 'opacity 0.3s ease-in-out',
+                                        pointerEvents: active && !menuOpen ? 'auto' : 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <IconButton
+                                        sx={{
+                                            color: 'white',
+                                        }}
+                                        onClick={onMenuOpen}
+                                    >
+                                        <MenuIcon />
+                                    </IconButton>
+                                </Box>
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        opacity: active && !menuOpen ? 0 : 1,
+                                        transition: 'opacity 0.3s ease-in-out',
+                                        pointerEvents: 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Skeleton
+                                        variant='circular'
+                                        width={40}
+                                        height={40}
+                                        sx={{
+                                            bgcolor: 'rgba(255, 255, 255, 0.13)',
+                                        }}
+                                    />
+                                </Box>
+                            </Box>
                             <Box
                                 component='img'
                                 alt='logo'
@@ -116,9 +157,9 @@ const Navbar = ({
                                         pointerEvents: 'none',
                                     }}
                                 >
-                                    <Skeleton 
-                                        variant="circular" 
-                                        width={40} 
+                                    <Skeleton
+                                        variant="circular"
+                                        width={40}
                                         height={40}
                                         sx={{
                                             bgcolor: 'rgba(255, 255, 255, 0.13)'
