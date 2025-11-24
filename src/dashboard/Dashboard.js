@@ -1,25 +1,25 @@
-import React, { useState } from 'react'
-import moment from 'moment'
+import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import Box from '@mui/material/Box'
-// import Breadcrumbs from '@mui/material/Breadcrumbs'
-import CircularProgress from '@mui/material/CircularProgress'
-import MuiAppBar from '@mui/material/AppBar'
+import LinearProgress from '@mui/material/LinearProgress'
 import MuiDrawer from '@mui/material/Drawer'
-// import Hidden from '@mui/material/Hidden'
-import Container from '@mui/material/Container'
-import Toolbar from '@mui/material/Toolbar'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import MenuIcon from '@mui/icons-material/Menu'
-import IconButton from '@mui/material/IconButton'
 import { useTheme, styled } from '@mui/material/styles'
 
-import View from '../View'
-import { useSubscribe } from '../api'
 import Menu from './Menu'
-import Router from './Router'
+import Router, { getCurrentSection } from './Router'
+import Footer from './Footer'
 
 const drawerWidth = 240
+
+const View = (menuOpen, theme) => ({
+    color: 'text.primary',
+    p: 0,
+    transition: theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    })
+})
 
 const openedMixin = (theme) => ({
     width: drawerWidth,
@@ -54,110 +54,55 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 }))
 
-const DateDisplay = ({ time }) => moment.unix(time / 1000000000).format('dddd, MMMM Do Y LTS')
-
-const AppBar = styled(MuiAppBar, {
-    shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
-    zIndex: !open ? theme.zIndex.drawer + 1 : 'inherit',
-    transition: theme.transitions.create(['width', 'margin'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    ...(open && {
-        marginLeft: drawerWidth,
-        width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    }),
-}))
-
-const Dashboard = ({ status, authorize, dispatch }) => {
+const Dashboard = ({ isAuthenticated, active, time, menuOpen, setMenuOpen }) => {
     const theme = useTheme()
     const location = useLocation()
     const mobile = useMediaQuery(theme.breakpoints.down('sm'))
 
-    const [time, timeSocket] = useSubscribe(null)
-    const active = timeSocket && timeSocket.readyState === WebSocket.OPEN
+    const currentSection = getCurrentSection(location.pathname)
 
-    const [menuOpen, setMenuOpen] = useState(false)
-
-    const pathname = location.pathname.split('/')
-    const isHome = pathname.length > 2 && pathname[2] === 'home'
-    const isSettings = pathname.length > 2 && pathname[2] === 'settings'
-    
-    const currentSection = isHome ? 'Home' : isSettings ? 'Settings' : 'Dashboard'
-    const filePath = window.location.protocol === 'file:' ? window.location.pathname.replace('index.html', '') : ''
-
-    if (status === 'unauthorized') {
+    if (!isAuthenticated) {
         return <Navigate to='/login' />
     }
 
     return <>
-        <AppBar open={menuOpen}>
-            <Toolbar>
-                <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <IconButton
-                        sx={{
-                            color: 'white',
-                            marginLeft: '-11px',
-                            marginRight: 3,
-                            opacity: menuOpen ? 0 : 1,
-                            transition: 'opacity 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
-                            pointerEvents: menuOpen ? 'none' : 'auto',
-                        }}
-                        onClick={() => setMenuOpen(true)}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Box
-                        component='img'
-                        alt='logo'
-                        src={filePath + '/logo.png'}
-                        sx={{
-                            height: 20,
-                            marginLeft: menuOpen ? '-56px' : 0,
-                            marginRight: 2,
-                            transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
-                        }}
-                    />
-                </Box>
-                <Box
-                    sx={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end',
-                    }}
-                >
-                    <Box sx={{
-                        fontSize: '0.9em',
-                        maxWidth: '14em',
-                        textAlign: 'end'
-                    }}>
-                        {active && time ? <DateDisplay time={time} /> : <CircularProgress size={24} />}
-                    </Box>
-                </Box>
-            </Toolbar>
-        </AppBar>
-
-        <Drawer variant={'permanent'} open={menuOpen} style={{ position: 'absolute' }}>
-            <Menu location={location} setOpen={setMenuOpen} open={menuOpen} currentSection={currentSection} />
+        {!active && (
+            <LinearProgress 
+                sx={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0,
+                    zIndex: (theme) => theme.zIndex.drawer + 3
+                }} 
+            />
+        )}
+        <Drawer variant={'permanent'} open={menuOpen}>
+            <Menu location={location} setOpen={setMenuOpen} open={menuOpen} currentSection={currentSection} active={active} />
         </Drawer>
-        <Container
-            maxWidth={'xl'}
-            style={{ overflow: 'hidden', paddingLeft: 56, marginTop: mobile ? 56 : 64 }}
-            disableGutters={true}
+
+        <Box
+            sx={{ 
+                paddingLeft: '56px',
+                marginTop: mobile ? '56px' : '64px',
+                height: mobile ? 'calc(100vh - 56px - 48px)' : 'calc(100vh - 64px - 48px)',
+                overflow: 'auto'
+            }}
         >
-            <Box component='main' sx={View(menuOpen, theme)} style={{
-                background: theme.palette.mode === 'light' ? '#fafafa' : '#2a2a2a',
-                height: '100%'
-            }}>
-                <Router dispatch={dispatch} authorize={authorize} />
+            <Box 
+                component='main' 
+                sx={{
+                    ...View(menuOpen, theme),
+                    maxWidth: '1920px',
+                    margin: '0 auto',
+                    background: theme.palette.background.default,
+                    minHeight: '100%'
+                }}
+            >
+                <Router active={active} />
             </Box>
-        </Container>
+        </Box>
+        <Footer time={time} active={active} />
     </>
 }
 

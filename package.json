@@ -16,7 +16,6 @@
         "lodash": "^4.17.21",
         "moment": "^2.30.1",
         "ooo-client": "^1.0.0",
-        "randomcolor": "^0.6.2",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "react-router-dom": "^6.28.1"
@@ -24,7 +23,6 @@
     "devDependencies": {
         "@emotion/babel-plugin": "^11.13.5",
         "@vitejs/plugin-react": "^4.3.4",
-        "sass": "^1.69.5",
         "vite": "^6.0.1"
     },
     "scripts": {

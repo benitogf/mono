@@ -1,9 +1,8 @@
 import React, { memo, useState } from 'react'
 import ClickAwayListener from '@mui/material/ClickAwayListener'
-import { NavLink, useLocation } from 'react-router-dom'
-import HomeIcon from '@mui/icons-material/Home'
-import SettingsIcon from '@mui/icons-material/Settings'
+import { NavLink } from 'react-router-dom'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import { routes } from './Router'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import List from '@mui/material/List'
@@ -11,23 +10,18 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
+import Skeleton from '@mui/material/Skeleton'
+import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import { Box } from '@mui/material'
+import { Box, useTheme } from '@mui/material'
 
-export default memo(({ open, setOpen, currentSection }) => {
-    const location = useLocation()
-    const lights = window.localStorage.getItem('lights') === 'on'
-    const pathname = location.pathname.split('/')
-    const isHome = pathname.length > 2 && pathname[2] === 'home'
-    const isSettings = pathname.length > 2 && pathname[2] === 'settings'
+export default memo(({ open, setOpen, currentSection, active }) => {
+    const theme = useTheme()
 
-    const activeLink = lights ? '#efefef' : 'rgb(88, 88, 88)'
-    // https://reacttraining.com/react-router/web/api/NavLink
-    // this trigers a re-render on each time tick
-    // disabling for now
-    const activestyle = {
-        background: activeLink,
-    }
+    // Style function for active NavLink
+    const getNavLinkStyle = ({ isActive }) => ({
+        backgroundColor: isActive ? theme.palette.action.selected : 'transparent',
+    })
 
     // const NavLinkRef = forwardRef((props, ref) => <NavLink {...props} ref={ref} />)
 
@@ -51,7 +45,6 @@ export default memo(({ open, setOpen, currentSection }) => {
         setOpenDone(false)
     }
 
-    const filePath = window.location.protocol === 'file:' ? window.location.pathname.replace('index.html', '') : ''
     return (<ClickAwayListener
         onClickAway={() => {
             if (openDone) {
@@ -59,10 +52,23 @@ export default memo(({ open, setOpen, currentSection }) => {
             }
         }}
     >
-        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between', 
+            height: '100%'
+        }}>
             <Box>
                 <List sx={{ padding: 0 }}>
-                    <ListItem sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 64 }}>
+                    <ListItem sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        minHeight: 56,
+                        [theme.breakpoints.up('sm')]: {
+                            minHeight: 64,
+                        }
+                    }}>
                         <Typography 
                             sx={{ 
                                 fontWeight: 700, 
@@ -89,46 +95,49 @@ export default memo(({ open, setOpen, currentSection }) => {
                     </ListItem>
                     <Divider />
 
-                    <ListItemButton
-                        component={NavLink}
-                        onClick={() => setOpen(false)}
-                        sx={{ cursor: 'pointer' }}
-                        {...{
-                            disableTouchRipple: true,
-                            activestyle,
-                            to: '/dashboard/home',
-                            selected: isHome,
-                        }}
-                    >
-                        <ListItemIcon>{<HomeIcon />}</ListItemIcon>
-                        <ListItemText 
-                            primary={'Home'} 
-                            primaryTypographyProps={{ sx: { textTransform: 'uppercase' } }}
-                        />
-                    </ListItemButton>
-
-
-                    <Divider />
-
-                    <ListItemButton
-                        component={NavLink}
-                        onClick={() => setOpen(false)}
-                        sx={{ cursor: 'pointer' }}
-                        {...{
-                            disableTouchRipple: true,
-                            to: '/dashboard/settings',
-                            activestyle,
-                            selected: isSettings,
-                        }}
-                    >
-                        <ListItemIcon>{<SettingsIcon />}</ListItemIcon>
-                        <ListItemText 
-                            primary={'Settings'} 
-                            primaryTypographyProps={{ sx: { textTransform: 'uppercase' } }}
-                        />
-                    </ListItemButton>
-
-                    <Divider />
+                    {routes.map((route) => {
+                        const Icon = route.icon
+                        return (
+                            <React.Fragment key={route.key}>
+                                <Box
+                                    sx={{
+                                        opacity: active ? 1 : 0.7,
+                                        transition: 'opacity 0.3s ease-in-out',
+                                    }}
+                                >
+                                    {active ? (
+                                        <ListItemButton
+                                            component={NavLink}
+                                            onClick={() => setOpen(false)}
+                                            to={`/dashboard${route.path}`}
+                                            style={getNavLinkStyle}
+                                            sx={{ cursor: 'pointer' }}
+                                        >
+                                            <ListItemIcon><Icon /></ListItemIcon>
+                                            <ListItemText 
+                                                primary={route.section}
+                                                slotProps={{
+                                                    primary: {
+                                                        sx: { textTransform: 'uppercase' }
+                                                    }
+                                                }}
+                                            />
+                                        </ListItemButton>
+                                    ) : (
+                                        <ListItem>
+                                            <ListItemIcon>
+                                                <Skeleton variant="circular" width={24} height={24} />
+                                            </ListItemIcon>
+                                            <ListItemText 
+                                                primary={<Skeleton variant="text" width="60%" />}
+                                            />
+                                        </ListItem>
+                                    )}
+                                </Box>
+                                <Divider />
+                            </React.Fragment>
+                        )
+                    })}
                 </List>
             </Box>
         </Box>

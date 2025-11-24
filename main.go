@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	wv "github.com/Ghibranalj/webview_go"
 	"github.com/benitogf/ko"
 	"github.com/benitogf/mono/auth"
 	"github.com/benitogf/mono/router"
@@ -17,7 +18,6 @@ import (
 	"github.com/benitogf/mono/webview"
 	"github.com/benitogf/ooo"
 	"github.com/gorilla/mux"
-	wv "github.com/webview/webview_go"
 )
 
 //go:embed build/*

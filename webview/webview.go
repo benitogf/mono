@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
+	webview "github.com/Ghibranalj/webview_go"
 	"github.com/benitogf/mono/spa"
-	webview "github.com/webview/webview_go"
 )
 
 type Config struct {

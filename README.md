@@ -29,6 +29,9 @@ npm install
 # Build frontend
 npm run build
 
+# Install webview dependencies
+apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+
 # Run as web application (port 8888)
 go run main.go -ui=false -spa=true
 

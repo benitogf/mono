@@ -211,6 +211,16 @@ export const authorize = async (dispatch, context) => {
         window.localStorage.setItem('account', profileRefresh.account)
         window.localStorage.setItem('role', profileRefresh.role)
     } catch (e) {
+        // Check if this is a network error (no response property)
+        if (!e.response) {
+            // Network error - server is unreachable
+            window.localStorage.setItem('account', '')
+            window.localStorage.setItem('token', '')
+            window.localStorage.setItem('role', '')
+            dispatch({ type: "status", data: "unauthorized" })
+            throw e
+        }
+        
         if (e && e.response && (e.response.status === 403 || e.response.status === 401)) {
             try {
                 // try to refresh the token
@@ -232,6 +242,15 @@ export const authorize = async (dispatch, context) => {
                 window.localStorage.setItem('token', refreshResponse.token)
                 window.localStorage.setItem('role', profileRefresh.role)
             } catch (e) {
+                // Check for network error in refresh attempt
+                if (!e.response) {
+                    window.localStorage.setItem('account', '')
+                    window.localStorage.setItem('token', '')
+                    window.localStorage.setItem('role', '')
+                    dispatch({ type: "status", data: "unauthorized" })
+                    throw e
+                }
+                
                 if (e && e.response && e.response.status !== 304) {
                     // refresh token failed, clear everything
                     window.localStorage.setItem('account', '')
@@ -241,6 +260,13 @@ export const authorize = async (dispatch, context) => {
                 }
                 throw e
             }
+        } else {
+            // Other HTTP errors (not 401/403)
+            window.localStorage.setItem('account', '')
+            window.localStorage.setItem('token', '')
+            window.localStorage.setItem('role', '')
+            dispatch({ type: "status", data: "unauthorized" })
+            throw e
         }
     }
 

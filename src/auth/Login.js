@@ -15,7 +15,7 @@ import { LinearProgress } from '@mui/material'
 
 import { api } from '../api'
 
-const Login = ({ status, authorize }) => {
+const Login = ({ isAuthenticated, authorize }) => {
     const theme = useTheme()
 
     const [rootAvailable, setRootAvailable] = useState(null)
@@ -57,13 +57,18 @@ const Login = ({ status, authorize }) => {
                 window.localStorage.setItem('role', response.role)
                 await authorize()
             } catch (e) {
-                const statusCode = await e.response.status
-                switch (statusCode) {
-                    case 403:
-                        setFailType('wrongPwd')
-                        break
-                    default:
-                        setFailType('')
+                // Check if this is a network error (no response)
+                if (!e.response) {
+                    setFailType('networkError')
+                } else {
+                    const statusCode = await e.response.status
+                    switch (statusCode) {
+                        case 403:
+                            setFailType('wrongPwd')
+                            break
+                        default:
+                            setFailType('')
+                    }
                 }
                 console.warn('nope', e)
                 setPassword('')
@@ -85,13 +90,16 @@ const Login = ({ status, authorize }) => {
             case 'wrongPwd':
                 error = 'Wrong password.'
                 break
+            case 'networkError':
+                error = 'Cannot connect to server.'
+                break
             default:
                 error = ''
         }
         return error
     }
 
-    if (status === 'authorized') {
+    if (isAuthenticated) {
         return <Navigate to='/dashboard' />
     }
 
@@ -112,7 +120,7 @@ const Login = ({ status, authorize }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                backgroundColor: theme.palette.mode === 'light' ? '#edf2f4' : '#4f4f4f',
+                backgroundColor: theme.palette.background.default,
             }}
         >
             <Toolbar />
@@ -123,9 +131,15 @@ const Login = ({ status, authorize }) => {
                     minWidth: '22.5rem',
                 }}
             >
-                <AppBar position='static' color='default' elevation={0}>
+                <AppBar 
+                    position='static' 
+                    elevation={0}
+                    sx={{
+                        backgroundColor: theme.palette.action.hover,
+                    }}
+                >
                     <Toolbar variant='dense'>
-                        <Typography component='h4'>Log in</Typography>
+                        <Typography component='h4' sx={{ color: theme.palette.text.primary }}>Log in</Typography>
                     </Toolbar>
                 </AppBar>
 
@@ -188,10 +202,10 @@ const Login = ({ status, authorize }) => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 value={password}
                                 disabled={loading}
-                                error={error && (failType === 'emptyPwd' || failType === 'wrongPwd')}
+                                error={error && (failType === 'emptyPwd' || failType === 'wrongPwd' || failType === 'networkError')}
                                 helperText={
                                     error &&
-                                    (failType === 'emptyPwd' || failType === 'wrongPwd') &&
+                                    (failType === 'emptyPwd' || failType === 'wrongPwd' || failType === 'networkError') &&
                                     getHelperText(failType)
                                 }
                             />
