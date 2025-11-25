@@ -23,8 +23,20 @@ if [ -d "$TEMP_DIR" ]; then
   mv "$TEMP_DIR"/* .
   shopt -u dotglob
   rmdir "$TEMP_DIR"
+  
+  # Turn this directory into its own app module that depends on mono,
+  # so core packages like embeder and spa are referenced from the repo
+  # instead of being embedded in the scaffold.
+  if [ -f go.mod ]; then
+    echo "[mono] Rewriting Go module path for local app..."
+    sed -i '1s|module github.com/benitogf/mono|module monoapp|' go.mod || true
+  fi
+
+  echo "[mono] Removing core library packages from scaffold (will be used via module dependency)..."
+  rm -rf embeder spa webview
+
   echo "[mono] Cleaning up non-runtime repo files..."
-  for f in README.md LICENSE use.sh; do
+  for f in README.md LICENSE use.sh go.mod go.sum; do
     if [ -e "$f" ]; then
       rm -f "$f"
     fi
