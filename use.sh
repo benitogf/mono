@@ -44,7 +44,7 @@ if [ -d "$TEMP_DIR" ]; then
   fi
 
   echo "[mono] Removing core library packages from scaffold (will be used via module dependency)..."
-  rm -rf embeder spa webview
+  rm -rf auth embeder spa webview
 
   echo "[mono] Cleaning up non-runtime repo files..."
   for f in README.md LICENSE use.sh go.mod go.sum; do
