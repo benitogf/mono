@@ -23,6 +23,12 @@ if [ -d "$TEMP_DIR" ]; then
   mv "$TEMP_DIR"/* .
   shopt -u dotglob
   rmdir "$TEMP_DIR"
+  echo "[mono] Cleaning up non-runtime repo files..."
+  for f in README.md LICENSE use.sh; do
+    if [ -e "$f" ]; then
+      rm -f "$f"
+    fi
+  done
 else
   echo "[mono] Error: expected directory '$TEMP_DIR' not found after unzip." >&2
   exit 1
