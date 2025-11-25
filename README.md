@@ -19,11 +19,29 @@ A full-stack boilerplate combining a Go backend with a React 19 frontend, design
 
 > Note: Vite 7 requires **Node.js 20.19+** or **22.12+**.
 
+### One-liner (recommended)
+
+From an empty directory:
+
 ```bash
-# Download and extract into current directory
-wget https://github.com/benitogf/mono/archive/refs/heads/main.zip
-unzip -j main.zip "mono-main/*" -d .
-rm main.zip
+curl -s https://raw.githubusercontent.com/benitogf/mono/master/use.sh | bash
+```
+
+This will:
+
+- Download the `master` branch zip
+- Extract it and move the contents into the current directory
+- Run `npm install` and `npm run build` if `npm` is available
+
+### Manual setup
+
+```bash
+# Download and extract into current directory (preserve repo structure)
+wget https://github.com/benitogf/mono/archive/refs/heads/master.zip -O mono-master.zip
+unzip mono-master.zip
+rm mono-master.zip
+mv mono-master/* .
+rmdir mono-master
 
 # Install frontend dependencies
 npm install
