@@ -7,10 +7,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
-	wv "github.com/Ghibranalj/webview_go"
 	"github.com/benitogf/ko"
 	"github.com/benitogf/mono/auth"
 	"github.com/benitogf/mono/router"
@@ -25,7 +25,7 @@ var uiBuildFS embed.FS
 
 var tempPathSpa string
 var tempPathUI string
-var view wv.WebView
+var view webview.Window
 
 var key = flag.String("key", "a-secret-key", "secret key for tokens")
 var dataPath = flag.String("dataPath", "db/data", "data storage path")
@@ -114,7 +114,8 @@ func main() {
 	// startup tasks and continuous threads
 	router.OnStartup(server, router.Opt{})
 
-	if *ui {
+	// Only run desktop webview UI on non-Windows platforms.
+	if *ui && runtime.GOOS != "windows" {
 		view = webview.New(webview.Config{
 			Width:   *windowWidth,
 			Height:  *windowHeight,

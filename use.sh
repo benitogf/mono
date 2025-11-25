@@ -31,8 +31,9 @@ if [ -d "$TEMP_DIR" ]; then
     sed -i "s|./mono|./$APP_NAME|g" reload || true
   fi
   if [ -f .gitignore ]; then
-    echo "[mono] Updating .gitignore to use $APP_NAME instead of mono..."
-    sed -i "s|mono|$APP_NAME|g" .gitignore || true
+    echo "[mono] Updating .gitignore to use $APP_NAME and $APP_NAME.exe instead of mono and mono.exe..."
+    sed -i "s|^mono$|$APP_NAME|" .gitignore || true
+    sed -i "s|^mono.exe$|$APP_NAME.exe|" .gitignore || true
   fi
 
   # Turn this directory into its own app module that depends on mono,

@@ -1,3 +1,5 @@
+//go:build !windows
+
 package webview
 
 import (
@@ -13,7 +15,14 @@ type Config struct {
 	SpaPort int
 }
 
-func New(cfg Config) webview.WebView {
+// Window abstracts the underlying webview implementation.
+// It matches the subset of methods used by main.go.
+type Window interface {
+	Run()
+	Terminate()
+}
+
+func New(cfg Config) Window {
 	w := webview.New(cfg.Debug)
 	w.SetSize(cfg.Width, cfg.Height, webview.HintNone)
 	w.Navigate("http://localhost:" + strconv.Itoa(cfg.SpaPort))
