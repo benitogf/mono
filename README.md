@@ -15,6 +15,19 @@ A full-stack boilerplate combining a Go backend with a React 19 frontend, design
 **Frontend**: React 19, MUI v7, Vite 7, Emotion, React Router  
 **Backend**: Go, Gorilla Mux, JWT, embedded FS, webview, leveldb
 
+## Requirements
+
+Mono is tested on **Ubuntu 24.04**. You need:
+
+- **Go** 1.21+
+- **Node.js** 20.19+ or 22.12+
+- Webview system libraries:
+
+```bash
+sudo apt update
+sudo apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+```
+
 ## Quickstart
 
 > Note: Vite 7 requires **Node.js 20.19+** or **22.12+**.
@@ -48,9 +61,6 @@ npm install
 
 # Build frontend
 npm run build
-
-# Install webview dependencies
-apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 
 # Run as web application (API + embedded SPA on spaPort)
 go run main.go -ui=false

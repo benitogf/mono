@@ -24,6 +24,13 @@ if [ -d "$TEMP_DIR" ]; then
   shopt -u dotglob
   rmdir "$TEMP_DIR"
   
+  # Adjust reload script to use the current folder name as binary name
+  APP_NAME="$(basename "$(pwd)")"
+  if [ -f reload ]; then
+    echo "[mono] Updating reload script to run ./$APP_NAME instead of ./mono..."
+    sed -i "s|./mono|./$APP_NAME|g" reload || true
+  fi
+
   # Turn this directory into its own app module that depends on mono,
   # so core packages like embeder and spa are referenced from the repo
   # instead of being embedded in the scaffold.
