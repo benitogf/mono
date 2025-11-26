@@ -10,6 +10,8 @@ github.com/benitogf/jsonpatch v0.0.0-20220924150135-fc4b5c761ac7 h1:bD4MAvpNi2d2
 github.com/benitogf/jsonpatch v0.0.0-20220924150135-fc4b5c761ac7/go.mod h1:O1Z+hTPUrXzHUjmKlpmNYK9wcncZ5rS3K8PqItDO0x0=
 github.com/benitogf/ko v0.0.0-20240207065000-c7a04eb1af62 h1:yLab8MqNdq8ulZIXu6IXRjnnD0OpdedqZudZQd1kltA=
 github.com/benitogf/ko v0.0.0-20240207065000-c7a04eb1af62/go.mod h1:GeRRH+CeR/XxFP4I7QEiN5RbOnJtLMOnYnkJ6o5hmdg=
+github.com/benitogf/network v0.0.0-20251125064936-78e6c87dff2a h1:Ftih54ylAV3bbuwzsliGt8lx5BFDYHtrbpdSPADYxG4=
+github.com/benitogf/network v0.0.0-20251125064936-78e6c87dff2a/go.mod h1:8TKbBBKBCNU5bs8wMUmhHGQE/IiO7v7DivlKhNymjPc=
 github.com/benitogf/ooo v0.0.0-20240207045118-931a7b58d317 h1:Bpf19IRALohOCkvFYZWBQR0IpCkhXxoYvHSA8Nx1nNY=
 github.com/benitogf/ooo v0.0.0-20240207045118-931a7b58d317/go.mod h1:0AMo1Jdi4LDAW+N/m91Ojt2tDAyYcwzkjbXKqs6jE9k=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
@@ -54,8 +56,8 @@ github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDN
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
 github.com/rs/cors v1.10.1 h1:L0uuZVXIKlI1SShY2nhFfo44TYvDPQ1w4oFkUJNfhyo=
 github.com/rs/cors v1.10.1/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
-github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
-github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
+github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
+github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
 github.com/tidwall/gjson v1.14.2/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=

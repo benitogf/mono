@@ -4,10 +4,7 @@ import (
 	"embed"
 	"flag"
 	"log"
-	"net"
-	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -16,6 +13,7 @@ import (
 	"github.com/benitogf/mono/router"
 	"github.com/benitogf/mono/spa"
 	"github.com/benitogf/mono/webview"
+	"github.com/benitogf/network"
 	"github.com/benitogf/ooo"
 	"github.com/gorilla/mux"
 )
@@ -33,29 +31,10 @@ var authPath = flag.String("authPath", "db/auth", "auth storage path")
 var port = flag.Int("port", 8888, "service port")
 var spaPort = flag.Int("spaPort", 80, "spa port")
 var silence = flag.Bool("silence", true, "silence output")
-var ui = flag.Bool("ui", false, "run with UI")
+var ui = flag.Bool("ui", true, "run with UI")
 var windowWidth = flag.Int("width", 800, "webview window width")
 var windowHeight = flag.Int("height", 600, "webview window height")
 var debugWebview = flag.Bool("debugWebview", false, "debug webview")
-
-func newHttpClient() *http.Client {
-	// https://github.com/golang/go/issues/24138
-	return &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout:   800 * time.Millisecond,
-				KeepAlive: 5 * time.Second,
-			}).Dial,
-			IdleConnTimeout:       10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-			MaxConnsPerHost:       3000,
-			MaxIdleConns:          10000,
-			MaxIdleConnsPerHost:   1000,
-			DisableKeepAlives:     false,
-		},
-	}
-}
 
 func cleanup() {
 	if tempPathSpa != "" {
@@ -102,7 +81,7 @@ func main() {
 				defer view.Terminate()
 			}
 		},
-		Client:  newHttpClient(),
+		Client:  network.NewHttpClient(),
 		Silence: *silence,
 	}
 
@@ -114,8 +93,8 @@ func main() {
 	// startup tasks and continuous threads
 	router.OnStartup(server, router.Opt{})
 
-	// Only run desktop webview UI on non-Windows platforms.
-	if *ui && runtime.GOOS != "windows" {
+	// Run desktop webview UI when the UI flag is set.
+	if *ui {
 		view = webview.New(webview.Config{
 			Width:   *windowWidth,
 			Height:  *windowHeight,

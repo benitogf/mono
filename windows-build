@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# Build Windows .exe from Ubuntu using MinGW and CGO.
+# Requires mingw-w64 packages as documented in the README.
+
+set -e
+
+CGO_ENABLED=1 GOOS="windows" GOARCH="amd64" \
+  CC="x86_64-w64-mingw32-gcc" \
+  CXX="x86_64-w64-mingw32-g++" \
+  go build -ldflags="-H windowsgui"
+
+if [ -f mono.exe ]; then
+	echo "Built Windows binary: ./mono.exe"
+else
+	echo "Expected mono.exe not found after build" >&2
+	exit 1
+fi

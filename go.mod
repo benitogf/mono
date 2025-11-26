@@ -1,14 +1,15 @@
 module github.com/benitogf/mono
 
-go 1.21.3
+go 1.24.4
 
 require (
 	github.com/Ghibranalj/webview_go v0.0.0-20251019170756-f933bf214be3
 	github.com/benitogf/ko v0.0.0-20240207065000-c7a04eb1af62
+	github.com/benitogf/network v0.0.0-20251125064936-78e6c87dff2a
 	github.com/benitogf/ooo v0.0.0-20240207045118-931a7b58d317
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.18.0
 )
 

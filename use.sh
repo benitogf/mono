@@ -36,6 +36,11 @@ if [ -d "$TEMP_DIR" ]; then
     sed -i "s|^mono.exe$|$APP_NAME.exe|" .gitignore || true
   fi
 
+  if [ -f windows-build ]; then
+    echo "[mono] Updating windows-build script to produce $APP_NAME.exe..."
+    sed -i "s|mono.exe|$APP_NAME.exe|g" windows-build || true
+  fi
+
   # Turn this directory into its own app module that depends on mono,
   # so core packages like embeder and spa are referenced from the repo
   # instead of being embedded in the scaffold.

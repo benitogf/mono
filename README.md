@@ -24,8 +24,43 @@ Mono is tested on **Ubuntu 24.04**. You need:
 - Webview system libraries:
 
 ```bash
-sudo apt update
 sudo apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+```
+
+### Cross-compiling Windows binary from Ubuntu 24.04
+
+To build a native **Windows** `.exe` from Ubuntu 24.04 using MinGW and CGO:
+
+Install MinGW toolchain:
+
+```bash
+sudo apt install mingw-w64 mingw-w64-common mingw-w64-i686-dev mingw-w64-x86-64-dev
+```
+
+Build the Windows binary (WebView UI enabled):
+
+```bash
+CGO_ENABLED=1 GOOS="windows" GOARCH="amd64" CC="x86_64-w64-mingw32-gcc" CXX="x86_64-w64-mingw32-g++" go build -ldflags="-H windowsgui"
+```
+
+Alternatively, from a checked-out project you can run the helper script (make it executable once if needed):
+
+```bash
+chmod +x windows-build   # once, if needed
+./windows-build
+```
+
+If you hit a WebView2 `EventToken.h` error from `github.com/Ghibranalj/webview_go` like:
+
+```text
+# github.com/Ghibranalj/webview_go
+.../WebView2.h:978:10: fatal error: EventToken.h: No such file or directory
+```
+
+create a case-sensitive symlink for the header in the MinGW include directory:
+
+```bash
+sudo ln -s /usr/x86_64-w64-mingw32/include/eventtoken.h /usr/x86_64-w64-mingw32/include/EventToken.h
 ```
 
 ## Quickstart
