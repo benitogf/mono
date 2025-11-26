@@ -22,27 +22,29 @@ import (
 var uiBuildFS embed.FS
 
 var tempPathSpa string
-var tempPathUI string
 var view webview.Window
 
+// server
 var key = flag.String("key", "a-secret-key", "secret key for tokens")
 var dataPath = flag.String("dataPath", "db/data", "data storage path")
 var authPath = flag.String("authPath", "db/auth", "auth storage path")
 var port = flag.Int("port", 8888, "service port")
-var spaPort = flag.Int("spaPort", 80, "spa port")
 var silence = flag.Bool("silence", true, "silence output")
+
+// webview
 var ui = flag.Bool("ui", true, "run with UI")
 var windowWidth = flag.Int("width", 800, "webview window width")
 var windowHeight = flag.Int("height", 600, "webview window height")
 var debugWebview = flag.Bool("debugWebview", false, "debug webview")
 
+// spa
+var spaPort = flag.Int("spaPort", 80, "spa port")
+var spaHost = flag.String("spaHost", "localhost", "spa host")
+var spaProtocol = flag.String("spaProtocol", "http", "spa protocol")
+
 func cleanup() {
 	if tempPathSpa != "" {
 		defer os.RemoveAll(tempPathSpa)
-	}
-
-	if tempPathUI != "" {
-		defer os.RemoveAll(tempPathUI)
 	}
 }
 
@@ -96,10 +98,12 @@ func main() {
 	// Run desktop webview UI when the UI flag is set.
 	if *ui {
 		view = webview.New(webview.Config{
-			Width:   *windowWidth,
-			Height:  *windowHeight,
-			Debug:   *debugWebview,
-			SpaPort: *spaPort,
+			Width:    *windowWidth,
+			Height:   *windowHeight,
+			Debug:    *debugWebview,
+			Port:     *spaPort,
+			Host:     *spaHost,
+			Protocol: *spaProtocol,
 		})
 		go server.WaitClose()
 		view.Run()

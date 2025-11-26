@@ -7,10 +7,12 @@ import (
 )
 
 type Config struct {
-	Width   int
-	Height  int
-	Debug   bool
-	SpaPort int
+	Width    int
+	Height   int
+	Debug    bool
+	Port     int
+	Host     string
+	Protocol string
 }
 
 // Window abstracts the underlying webview implementation.
@@ -21,8 +23,15 @@ type Window interface {
 }
 
 func New(cfg Config) Window {
+	if cfg.Host == "" {
+		cfg.Host = "localhost"
+	}
+	if cfg.Protocol == "" {
+		cfg.Protocol = "http"
+	}
+
 	w := webview.New(cfg.Debug)
 	w.SetSize(cfg.Width, cfg.Height, webview.HintNone)
-	w.Navigate("http://localhost:" + strconv.Itoa(cfg.SpaPort))
+	w.Navigate(cfg.Protocol + "://" + cfg.Host + ":" + strconv.Itoa(cfg.Port))
 	return w
 }
