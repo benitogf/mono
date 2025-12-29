@@ -8,13 +8,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/benitogf/auth"
 	"github.com/benitogf/ko"
-	"github.com/benitogf/mono/auth"
 	"github.com/benitogf/mono/router"
 	"github.com/benitogf/mono/spa"
 	"github.com/benitogf/mono/webview"
 	"github.com/benitogf/network"
 	"github.com/benitogf/ooo"
+	"github.com/benitogf/ooo/storage"
 	"github.com/gorilla/mux"
 )
 
@@ -51,16 +52,20 @@ func cleanup() {
 func main() {
 	flag.Parse()
 
+	authStorage := storage.New(storage.LayeredConfig{
+		Memory:   storage.NewMemoryLayer(),
+		Embedded: ko.NewEmbeddedStorage(*authPath),
+	})
+
 	// auth storage
-	authStore := &ko.Storage{Path: *authPath}
-	err := authStore.Start(ooo.StorageOpt{})
+	err := authStorage.Start(storage.Options{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	go ooo.WatchStorageNoop(authStore)
+	go storage.WatchStorageNoop(authStorage)
 	autho := auth.New(
 		auth.NewJwtStore(*key, time.Hour*48),
-		authStore,
+		authStorage,
 	)
 
 	// Start SPA server (always on)
@@ -74,7 +79,10 @@ func main() {
 		Router:       mux.NewRouter(),
 		Static:       true,
 		Workers:      2,
-		Storage:      &ko.Storage{Path: *dataPath},
+		Storage: storage.New(storage.LayeredConfig{
+			Memory:   storage.NewMemoryLayer(),
+			Embedded: ko.NewEmbeddedStorage(*dataPath),
+		}),
 		OnClose: func() {
 			log.Println("going away")
 			cleanup()
