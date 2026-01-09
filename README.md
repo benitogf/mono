@@ -117,3 +117,12 @@ npm start
 # Backend dev server
 go run main.go -ui=false -port=8888
 ```
+
+## Related Projects
+
+Part of the [ooo](https://github.com/benitogf/ooo) ecosystem:
+
+- [ooo](https://github.com/benitogf/ooo) - Main server library
+- [ko](https://github.com/benitogf/ko) - Persistent storage adapter
+- [ooo-client](https://github.com/benitogf/ooo-client) - JavaScript client
+- [auth](https://github.com/benitogf/auth) - JWT authentication
