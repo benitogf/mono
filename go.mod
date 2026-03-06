@@ -4,10 +4,10 @@ go 1.25
 
 require (
 	github.com/Ghibranalj/webview_go v0.0.0-20251019170756-f933bf214be3
-	github.com/benitogf/auth v0.0.0-20260109062751-db0dd7187682
-	github.com/benitogf/ko v0.0.0-20260109062130-c62c9e64bdc5
-	github.com/benitogf/network v0.0.0-20251125064936-78e6c87dff2a
-	github.com/benitogf/ooo v0.0.0-20260109055348-efad8e781ed7
+	github.com/benitogf/auth v0.0.0-20260205053058-ebd26e9eba08
+	github.com/benitogf/ko v0.0.0-20260223095138-d9bdb5feb085
+	github.com/benitogf/network v0.0.0-20260109060111-90bcf6703d14
+	github.com/benitogf/ooo v0.0.0-20260225041933-aad9f9448529
 	github.com/gorilla/mux v1.8.1
 )
 
@@ -34,7 +34,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/webview/webview_go v0.0.0-20240831120633-6173450d4dd6 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
