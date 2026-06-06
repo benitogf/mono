@@ -74,7 +74,10 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, path)
 }
 
-func Start(frontPath embed.FS, folder string, port int) string {
+// newServer expands the embedded front-end and builds the SPA HTTP
+// server, returning the temp path the assets were expanded to. Shared by
+// Start (plaintext) and StartTLS (HTTPS).
+func newServer(frontPath embed.FS, folder string, port int) (string, *http.Server) {
 	tempPath, err := embeder.Expand(frontPath, false)
 	if err != nil {
 		log.Fatal(err)
@@ -85,14 +88,36 @@ func Start(frontPath embed.FS, folder string, port int) string {
 	spa := spaHandler{staticPath: tempPath + "/" + folder, indexPath: "index.html"}
 	router.PathPrefix("/").Handler(spa)
 
-	server := &http.Server{
+	return tempPath, &http.Server{
 		Handler: router,
 		Addr:    "0.0.0.0:" + strconv.Itoa(port),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
+}
 
-	go server.ListenAndServe()
+// Start serves the embedded SPA over plaintext HTTP on the given port and
+// returns the temp path the assets were expanded to.
+func Start(frontPath embed.FS, folder string, port int) string {
+	tempPath, server := newServer(frontPath, folder, port)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Println("spa: server stopped:", err)
+		}
+	}()
+	return tempPath
+}
+
+// StartTLS serves the embedded SPA over HTTPS using the certificate and
+// key at certFile/keyFile, returning the temp path the assets were
+// expanded to. Use it when the SPA must not be served over plaintext.
+func StartTLS(frontPath embed.FS, folder string, port int, certFile, keyFile string) string {
+	tempPath, server := newServer(frontPath, folder, port)
+	go func() {
+		if err := server.ListenAndServeTLS(certFile, keyFile); err != nil && err != http.ErrServerClosed {
+			log.Println("spa: TLS server stopped:", err)
+		}
+	}()
 	return tempPath
 }
