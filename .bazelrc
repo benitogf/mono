@@ -1,0 +1,16 @@
+common --enable_platform_specific_config
+build:linux --sandbox_add_mount_pair=/tmp
+build --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+
+# The release genrules shell out to the system Go + Zig, so they inherit the
+# caller's PATH/HOME/module env rather than a pinned one — CI puts Go on PATH via
+# setup-go and Zig via $GITHUB_PATH; locally they're already on PATH. (Bare
+# --action_env=NAME forwards NAME from the environment instead of fixing a value.)
+build --action_env=PATH
+build --action_env=HOME
+build --action_env=GOPATH
+build --action_env=GOMODCACHE
+build --action_env=GOCACHE
+
+# Version stamped into the binary (defaults to "dev" when unset).
+build --action_env=MONO_VERSION

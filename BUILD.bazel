@@ -1,0 +1,132 @@
+# Release builds for mono — a single Go binary that embeds the React SPA.
+#
+# linux/amd64 + windows/*  : -tags webview (CGO) → native desktop window
+#   - linux/amd64 builds natively against the host's WebKitGTK 4.1
+#   - windows/*  cross-compile from Linux via Zig (WebView2; no external libs),
+#     with a minimal EventToken.h shim, exactly like spartan/samples/webcanvas
+# linux/arm64 + darwin/*   : headless CGO-free server (cross-compiles cleanly;
+#   no native webview toolchain for those targets yet — they serve the UI on a
+#   port).
+#
+# The SPA (build/) must be built (npm run build) before bazel build — it's
+# embedded via //go:embed build/*. The genrules build in the real source tree
+# (resolved via readlink) rather than the sandbox, because go:embed rejects the
+# symlinked build/ dir Bazel would otherwise stage.
+
+filegroup(
+    name = "gosrc",
+    srcs = glob(
+        [
+            "**/*.go",
+            "build/**",
+        ],
+        exclude = ["bazel-*/**"],
+    ),
+)
+
+# cd into the real module dir (so go:embed sees real files) and stamp $@ (the
+# execroot output) with the version from MONO_VERSION (default "dev").
+_PROLOGUE = "set -e\nOUT=$$PWD/$@\ncd $$(dirname $$(readlink -f $(location go.mod)))\n"
+_LDFLAGS = "-s -w -X github.com/benitogf/mono/internal/version.Version=$${MONO_VERSION:-dev}"
+_SRCS = [
+    ":gosrc",
+    "go.mod",
+    "go.sum",
+]
+
+# ---- Desktop (CGO + webview) -------------------------------------------------
+
+genrule(
+    name = "linux_amd64",
+    srcs = _SRCS,
+    outs = ["mono-linux-amd64"],
+    cmd = _PROLOGUE + """
+        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags webview -trimpath \
+          -ldflags "%s" -o $$OUT .
+    """ % _LDFLAGS,
+    local = True,
+)
+
+_WIN_SHIM = """
+        SHIM=$$(mktemp -d)
+        printf '#pragma once\\n#ifndef __EventToken_h__\\n#define __EventToken_h__\\nstruct EventRegistrationToken { __int64 value; };\\n#endif\\n' > $$SHIM/EventToken.h
+"""
+
+genrule(
+    name = "windows_amd64",
+    srcs = _SRCS,
+    outs = ["mono-windows-amd64.exe"],
+    cmd = _PROLOGUE + _WIN_SHIM + """
+        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+          CC="zig cc -target x86_64-windows-gnu" \
+          CXX="zig c++ -target x86_64-windows-gnu" \
+          CGO_CXXFLAGS="-I$$SHIM" CGO_LDFLAGS="-Wl,--subsystem,windows" \
+          go build -tags webview -trimpath \
+          -ldflags "-H windowsgui %s" -o $$OUT .
+        rm -rf $$SHIM
+    """ % _LDFLAGS,
+    local = True,
+)
+
+genrule(
+    name = "windows_arm64",
+    srcs = _SRCS,
+    outs = ["mono-windows-arm64.exe"],
+    cmd = _PROLOGUE + _WIN_SHIM + """
+        CGO_ENABLED=1 GOOS=windows GOARCH=arm64 \
+          CC="zig cc -target aarch64-windows-gnu" \
+          CXX="zig c++ -target aarch64-windows-gnu" \
+          CGO_CXXFLAGS="-I$$SHIM" CGO_LDFLAGS="-Wl,--subsystem,windows" \
+          go build -tags webview -trimpath \
+          -ldflags "-H windowsgui %s" -o $$OUT .
+        rm -rf $$SHIM
+    """ % _LDFLAGS,
+    local = True,
+)
+
+# ---- Headless (CGO-free server, cross-compiled) ------------------------------
+
+genrule(
+    name = "linux_arm64",
+    srcs = _SRCS,
+    outs = ["mono-linux-arm64"],
+    cmd = _PROLOGUE + """
+        CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
+          -ldflags "%s" -o $$OUT .
+    """ % _LDFLAGS,
+    local = True,
+)
+
+genrule(
+    name = "darwin_amd64",
+    srcs = _SRCS,
+    outs = ["mono-darwin-amd64"],
+    cmd = _PROLOGUE + """
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath \
+          -ldflags "%s" -o $$OUT .
+    """ % _LDFLAGS,
+    local = True,
+)
+
+genrule(
+    name = "darwin_arm64",
+    srcs = _SRCS,
+    outs = ["mono-darwin-arm64"],
+    cmd = _PROLOGUE + """
+        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath \
+          -ldflags "%s" -o $$OUT .
+    """ % _LDFLAGS,
+    local = True,
+)
+
+filegroup(
+    name = "release",
+    srcs = [
+        ":darwin_amd64",
+        ":darwin_arm64",
+        ":linux_amd64",
+        ":linux_arm64",
+        ":windows_amd64",
+        ":windows_arm64",
+    ],
+)

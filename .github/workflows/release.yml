@@ -1,0 +1,61 @@
+name: release
+
+# Builds the release binaries (Go backend + embedded React SPA) for every OS/arch
+# on a version tag and attaches them to the GitHub Release, all from one Linux
+# runner via Bazel + a Zig hermetic C toolchain (same approach as
+# spartan/samples/webcanvas):
+#   - linux/amd64 + windows/*  : -tags webview (CGO) → native desktop window
+#     (linux native against WebKitGTK 4.1; windows cross-compiled via `zig cc`)
+#   - linux/arm64 + darwin/*   : headless CGO-free server (no native webview
+#     toolchain for those targets yet)
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build # vite → build/ (embedded by the Go binary via //go:embed)
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      # WebKitGTK 4.1 for the native linux/amd64 webview build.
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      # Zig for the Windows (WebView2) cross-compile.
+      - name: Install Zig
+        run: |
+          curl -sSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | tar -xJ
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
+
+      - uses: bazel-contrib/setup-bazel@0.14.0
+
+      - name: Build all release binaries
+        env:
+          MONO_VERSION: ${{ github.ref_name }}
+        run: bazel build //:release
+
+      # bazel-bin holds mono-<os>-<arch>[.exe]; copy out of the read-only
+      # symlink tree so the release upload can read them.
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+          cp -L bazel-bin/mono-* dist/
+          ls -l dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/mono-*
+          fail_on_unmatched_files: true
