@@ -1,11 +1,8 @@
 package webview
 
-import (
-	"strconv"
+import "strconv"
 
-	webview "github.com/Ghibranalj/webview_go"
-)
-
+// Config configures the desktop webview window.
 type Config struct {
 	Width    int
 	Height   int
@@ -22,16 +19,14 @@ type Window interface {
 	Terminate()
 }
 
-func New(cfg Config) Window {
+// url normalizes empty fields to their defaults and returns the address the
+// webview should navigate to. It is shared by the native and headless builds.
+func (cfg *Config) url() string {
 	if cfg.Host == "" {
 		cfg.Host = "localhost"
 	}
 	if cfg.Protocol == "" {
 		cfg.Protocol = "http"
 	}
-
-	w := webview.New(cfg.Debug)
-	w.SetSize(cfg.Width, cfg.Height, webview.HintNone)
-	w.Navigate(cfg.Protocol + "://" + cfg.Host + ":" + strconv.Itoa(cfg.Port))
-	return w
+	return cfg.Protocol + "://" + cfg.Host + ":" + strconv.Itoa(cfg.Port)
 }
