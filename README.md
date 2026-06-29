@@ -27,41 +27,45 @@ Mono is tested on **Ubuntu 24.04**. You need:
 sudo apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 ```
 
-### Cross-compiling Windows binary from Ubuntu 24.04
+## Release builds (all platforms from one Linux runner)
 
-To build a native **Windows** `.exe` from Ubuntu 24.04 using MinGW and CGO:
+Mono cross-compiles a release binary for **every OS/arch from a single Linux
+machine** using **Bazel + a Zig hermetic C toolchain** — the same approach proven
+in [`spartan/samples/webcanvas`](https://github.com/benitogf/spartan). No
+per-OS runners and no MinGW: Zig (`zig cc`) cross-compiles the Windows WebView2
+binaries from Linux.
 
-Install MinGW toolchain:
+| Target | Build | Webview |
+| --- | --- | --- |
+| linux/amd64 | native CGO `-tags webview` | WebKitGTK 4.1 desktop window |
+| windows/amd64, windows/arm64 | Zig cross-compile, CGO `-tags webview` | WebView2 desktop window (no console) |
+| linux/arm64, darwin/amd64, darwin/arm64 | headless CGO-free `go build` | none — serves the SPA on a port |
 
-```bash
-sudo apt install mingw-w64 mingw-w64-common mingw-w64-i686-dev mingw-w64-x86-64-dev
-```
+> The Linux/arm64 GTK webview needs an arm64 WebKitGTK sysroot and macOS needs a
+> Cocoa runner, so those targets stay headless for now.
 
-Build the Windows binary (WebView UI enabled):
+### Prerequisites
 
-```bash
-CGO_ENABLED=1 GOOS="windows" GOARCH="amd64" CC="x86_64-w64-mingw32-gcc" CXX="x86_64-w64-mingw32-g++" go build -ldflags="-H windowsgui"
-```
-
-Alternatively, from a checked-out project you can run the helper script (make it executable once if needed):
-
-```bash
-chmod +x windows-build   # once, if needed
-./windows-build
-```
-
-If you hit a WebView2 `EventToken.h` error from `github.com/Ghibranalj/webview_go` like:
-
-```text
-# github.com/Ghibranalj/webview_go
-.../WebView2.h:978:10: fatal error: EventToken.h: No such file or directory
-```
-
-create a case-sensitive symlink for the header in the MinGW include directory:
+- **Bazel** (via [bazelisk](https://github.com/bazelbuild/bazelisk))
+- **Zig** 0.13 on `PATH` (for the Windows cross-compile)
+- WebKitGTK 4.1 dev libraries (for the native linux/amd64 webview build):
 
 ```bash
-sudo ln -s /usr/x86_64-w64-mingw32/include/eventtoken.h /usr/x86_64-w64-mingw32/include/EventToken.h
+sudo apt install pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 ```
+
+### Build
+
+```bash
+npm run build          # vite → build/ (embedded by the Go binary via //go:embed)
+bazel build //:release # all six binaries → bazel-bin/mono-<os>-<arch>[.exe]
+```
+
+To build a single target, name its genrule, e.g. `bazel build //:windows_amd64`.
+The version stamped into the binary comes from the `MONO_VERSION` env var
+(defaults to `dev`). CI sets it from the pushed git tag — see
+`.github/workflows/release.yml`, which runs this same build on every `v*` tag and
+attaches the artifacts to the GitHub Release.
 
 ## Quickstart
 

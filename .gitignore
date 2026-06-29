@@ -11,6 +11,11 @@
 # production
 /build
 
+# bazel build symlinks + lockfile
+/bazel-*
+MODULE.bazel.lock
+dist/
+
 # misc
 .DS_Store
 .env.local

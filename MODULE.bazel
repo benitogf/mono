@@ -1,0 +1,5 @@
+# The release genrules in BUILD.bazel shell out to the system Go + Zig toolchains
+# (Zig cross-compiles the Windows webview binaries from Linux), so mono needs no
+# Bazel C/Go toolchain deps — this file just marks the repo a bzlmod module and
+# Bazel orchestrates the per-target genrules.
+module(name = "mono", version = "0.1.0")
