@@ -3,8 +3,9 @@
 //
 //	go build -ldflags "-X github.com/benitogf/mono/internal/version.Version=v1.2.3"
 //
-// The Bazel+Zig release build injects these from the git tag, commit, and build
-// timestamp; they default to development placeholders for local builds.
+// The Bazel+Zig release build stamps Version from the pushed git tag
+// (MONO_VERSION). Commit and Date stay at their defaults unless a caller
+// overrides them with additional -X flags.
 package version
 
 var (

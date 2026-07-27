@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/benitogf/auth"
 	"github.com/benitogf/ko"
+	"github.com/benitogf/mono/internal/version"
 	"github.com/benitogf/mono/router"
 	"github.com/benitogf/mono/spa"
 	"github.com/benitogf/mono/webview"
@@ -38,6 +40,8 @@ var windowWidth = flag.Int("width", 800, "webview window width")
 var windowHeight = flag.Int("height", 600, "webview window height")
 var debugWebview = flag.Bool("debugWebview", false, "debug webview")
 
+var showVersion = flag.Bool("version", false, "print build version and exit")
+
 // spa
 var spaPort = flag.Int("spaPort", 80, "spa port")
 var spaHost = flag.String("spaHost", "localhost", "spa host")
@@ -51,6 +55,11 @@ func cleanup() {
 
 func main() {
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version.String())
+		return
+	}
 
 	authStorage := storage.New(storage.LayeredConfig{
 		Memory:   storage.NewMemoryLayer(),
